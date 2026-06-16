@@ -11,6 +11,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
             Waterschaple <span aria-hidden="true">🌊</span>
           </h1>
           <p class="text-teal-light/70 text-sm mt-0.5" id="game-date-label"></p>
+          <p class="text-white/40 text-xs mt-0.5">Vandaag voor iedereen hetzelfde waterschap</p>
         </div>
         <div class="flex items-center gap-2">
           <button
@@ -28,10 +29,20 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         </div>
       </div>
 
+      <div
+        id="yesterday-reveal"
+        class="mt-3 py-2.5 px-4 rounded-xl bg-white/5 border border-white/10 text-sm text-white/60 text-center"
+      >
+        <span aria-hidden="true">📅</span>
+        Gisteren
+        <span class="text-white/40">(Puzzel #<span id="yesterday-puzzle-number">—</span>)</span>:
+        <strong id="yesterday-waterschap-name" class="text-teal-light font-semibold">…</strong>
+      </div>
+
       <button
         id="stats-bar"
         type="button"
-        class="mt-3 w-full flex items-center justify-center gap-4 sm:gap-6 py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-sm"
+        class="mt-2 w-full flex items-center justify-center gap-4 sm:gap-6 py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-sm"
         aria-label="Open statistieken"
       >
         <span class="flex items-center gap-1.5">
@@ -172,7 +183,8 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           <button data-close="info" class="text-gray-400 hover:text-gray-600 text-2xl leading-none" aria-label="Sluiten">&times;</button>
         </div>
         <ul class="space-y-3 text-sm text-gray-700 leading-relaxed">
-          <li>🎯 Elke dag is er <strong>één waterschap</strong> het doelwit &mdash; uit alle 20 Nederlandse waterschappen.</li>
+          <li>🎯 Elke dag is er <strong>één waterschap</strong> het doelwit &mdash; voor <strong>alle spelers wereldwijd hetzelfde</strong>.</li>
+          <li>📅 Het antwoord van <strong>gisteren</strong> staat altijd bovenaan het scherm.</li>
           <li>🔄 Je hebt <strong>6 pogingen</strong> om het juiste waterschap te vinden.</li>
           <li>📍 Na elke gok zie je de <strong>afstand in km</strong>, een <strong>pijl</strong> richting het doel, en een <strong>nabijheidsscore</strong> (0&ndash;100%).</li>
           <li>🟩 <strong>100%</strong> betekent dat je het juiste waterschap hebt geraden!</li>

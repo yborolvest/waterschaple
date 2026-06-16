@@ -10,6 +10,8 @@ import {
   bearingToArrow,
   distanceToProximity,
   getDailyTarget,
+  getYesterdayTarget,
+  getYesterdayDate,
   getPuzzleNumber,
   getDateKey,
   proximityToShareEmoji,
@@ -590,6 +592,11 @@ export function initWaterschaple() {
     year: 'numeric',
   });
   $('#game-date-label')!.textContent = `Puzzel #${state.puzzleNumber} · ${dateStr}`;
+
+  const yesterday = getYesterdayTarget(today);
+  const yesterdayPuzzle = getPuzzleNumber(getYesterdayDate(today));
+  $('#yesterday-puzzle-number')!.textContent = String(yesterdayPuzzle);
+  $('#yesterday-waterschap-name')!.textContent = yesterday.name;
 
   renderAttemptDots();
   updateAttemptLabel();

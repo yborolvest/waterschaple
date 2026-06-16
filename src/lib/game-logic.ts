@@ -76,6 +76,18 @@ export function getPuzzleNumber(date = new Date()): number {
   );
 }
 
+/** Gisteren in lokale tijdzone / yesterday's date */
+export function getYesterdayDate(date = new Date()): Date {
+  const yesterday = new Date(date);
+  yesterday.setDate(yesterday.getDate() - 1);
+  return yesterday;
+}
+
+/** Gisteren's doelwaterschap — voor iedereen wereldwijd hetzelfde */
+export function getYesterdayTarget(date = new Date()): Waterschap {
+  return getDailyTarget(getYesterdayDate(date));
+}
+
 /** YYYY-MM-DD in lokale tijdzone */
 export function getDateKey(date = new Date()): string {
   const y = date.getFullYear();
