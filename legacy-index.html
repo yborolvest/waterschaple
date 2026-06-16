@@ -1,0 +1,1261 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Waterschaple 🌊</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            ocean: {
+              950: '#0A2540',
+              900: '#0F3460',
+              800: '#1E3A8A',
+              700: '#1D4ED8',
+              600: '#2563EB',
+            },
+            teal: {
+              accent: '#14B8A6',
+              light: '#5EEAD4',
+            },
+          },
+          fontFamily: {
+            display: ['Segoe UI', 'system-ui', 'sans-serif'],
+          },
+          animation: {
+            'fade-in': 'fadeIn 0.4s ease-out forwards',
+            'slide-up': 'slideUp 0.35s ease-out forwards',
+            'wave': 'wave 8s ease-in-out infinite',
+          },
+          keyframes: {
+            fadeIn: {
+              '0%': { opacity: '0' },
+              '100%': { opacity: '1' },
+            },
+            slideUp: {
+              '0%': { opacity: '0', transform: 'translateY(12px)' },
+              '100%': { opacity: '1', transform: 'translateY(0)' },
+            },
+            wave: {
+              '0%, 100%': { transform: 'translateX(0)' },
+              '50%': { transform: 'translateX(-25px)' },
+            },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    /* Custom scrollbar for autocomplete list */
+    .autocomplete-list::-webkit-scrollbar { width: 6px; }
+    .autocomplete-list::-webkit-scrollbar-track { background: transparent; }
+    .autocomplete-list::-webkit-scrollbar-thumb { background: #1E3A8A; border-radius: 3px; }
+
+    /* Wave background decoration */
+    .wave-bg::before {
+      content: '';
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 180px;
+      background: linear-gradient(180deg, transparent 0%, rgba(20, 184, 166, 0.08) 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .guess-row { opacity: 0; }
+    .guess-row.visible { animation: slideUp 0.35s ease-out forwards; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Proximity bar gradient */
+    .proximity-bar {
+      background: linear-gradient(90deg, #EF4444 0%, #F59E0B 50%, #22C55E 100%);
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-ocean-950 text-white font-display wave-bg flex flex-col">
+
+  <!-- Header -->
+  <header class="relative z-10 px-4 py-5 sm:py-6 border-b border-white/10 bg-ocean-950/80 backdrop-blur-sm">
+    <div class="max-w-lg mx-auto">
+      <div class="flex items-center justify-between">
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
+            Waterschaple <span aria-hidden="true">🌊</span>
+          </h1>
+          <p class="text-teal-light/70 text-sm mt-0.5" id="game-date-label"></p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button
+            id="btn-stats"
+            type="button"
+            aria-label="Statistieken bekijken"
+            class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-lg"
+          >📊</button>
+          <button
+            id="btn-info"
+            type="button"
+            aria-label="Spelregels bekijken"
+            class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center text-lg"
+          >ℹ️</button>
+        </div>
+      </div>
+      <!-- Compact streak & score bar / EN: Quick stats in header -->
+      <button
+        id="stats-bar"
+        type="button"
+        class="mt-3 w-full flex items-center justify-center gap-4 sm:gap-6 py-2.5 px-4 rounded-xl
+               bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-sm"
+        aria-label="Open statistieken"
+      >
+        <span class="flex items-center gap-1.5">
+          <span aria-hidden="true">🔥</span>
+          <span class="text-white/50">Reeks</span>
+          <span id="header-streak" class="font-bold text-teal-accent">0</span>
+        </span>
+        <span class="w-px h-4 bg-white/15" aria-hidden="true"></span>
+        <span class="flex items-center gap-1.5">
+          <span aria-hidden="true">🏆</span>
+          <span class="text-white/50">Gewonnen</span>
+          <span id="header-wins" class="font-bold text-white">0</span>
+        </span>
+        <span class="w-px h-4 bg-white/15 hidden sm:block" aria-hidden="true"></span>
+        <span class="hidden sm:flex items-center gap-1.5">
+          <span class="text-white/50">Winst%</span>
+          <span id="header-winrate" class="font-bold text-white">0</span>
+        </span>
+      </button>
+      <!-- Global daily solve count / EN: How many players solved today's puzzle -->
+      <div
+        id="global-solve-banner"
+        class="mt-2 w-full py-2 px-4 rounded-xl bg-teal-accent/10 border border-teal-accent/20 text-center text-sm text-teal-light/90"
+        aria-live="polite"
+      >
+        <span aria-hidden="true">🌍</span>
+        <span id="global-solve-text">Laden…</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main game area -->
+  <main class="relative z-10 flex-1 px-4 py-6 sm:py-8">
+    <div class="max-w-lg mx-auto">
+
+      <!-- Attempts indicator -->
+      <div class="flex items-center justify-between mb-4">
+        <p class="text-sm text-white/60">
+          Poging <span id="attempt-current" class="text-teal-accent font-semibold">1</span>
+          van <span class="font-semibold">6</span>
+        </p>
+        <div class="flex gap-1.5" id="attempt-dots" aria-hidden="true">
+          <!-- Filled by JS -->
+        </div>
+      </div>
+
+      <!-- Autocomplete input -->
+      <div class="relative mb-6" id="combobox-wrapper">
+        <label for="guess-input" class="sr-only">Kies een waterschap</label>
+        <div class="flex gap-2">
+          <div class="relative flex-1">
+            <input
+              id="guess-input"
+              type="text"
+              autocomplete="off"
+              placeholder="Zoek een waterschap…"
+              class="w-full px-4 py-3.5 rounded-xl bg-white text-ocean-950 placeholder:text-gray-400
+                     border-2 border-transparent focus:border-teal-accent focus:outline-none
+                     transition-colors text-base shadow-lg"
+              role="combobox"
+              aria-expanded="false"
+              aria-controls="autocomplete-list"
+              aria-autocomplete="list"
+            />
+            <ul
+              id="autocomplete-list"
+              role="listbox"
+              class="autocomplete-list absolute left-0 right-0 top-full mt-1 max-h-52 overflow-y-auto
+                     bg-white rounded-xl shadow-2xl border border-gray-100 z-50 hidden"
+            ></ul>
+          </div>
+          <button
+            id="btn-guess"
+            type="button"
+            class="px-5 py-3.5 rounded-xl bg-teal-accent hover:bg-teal-400 text-ocean-950
+                   font-bold transition-all hover:scale-105 active:scale-95 shadow-lg
+                   disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+          >Raad</button>
+        </div>
+        <p id="input-error" class="text-red-400 text-sm mt-2 hidden" role="alert"></p>
+      </div>
+
+      <!-- Guess history -->
+      <section aria-label="Gissingsgeschiedenis">
+        <h2 class="text-xs uppercase tracking-widest text-white/40 mb-3 font-semibold">Jouw pogingen</h2>
+        <div id="guess-history" class="space-y-2 min-h-[48px]">
+          <p id="empty-state" class="text-white/30 text-sm text-center py-6">
+            Nog geen pogingen. Kies een waterschap en druk op Raad.
+          </p>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="relative z-10 px-4 py-4 border-t border-white/10 text-center text-white/40 text-xs">
+    <p>Waterschaple &mdash; Raad het waterschap van vandaag</p>
+    <p class="mt-1">Your Digital Agency</p>
+  </footer>
+
+  <!-- Stats modal -->
+  <div id="modal-stats" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="stats-title">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" data-close="stats"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div class="bg-white text-ocean-950 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in max-h-[85vh] overflow-y-auto">
+        <div class="flex items-start justify-between mb-5">
+          <h2 id="stats-title" class="text-xl font-bold">Statistieken</h2>
+          <button data-close="stats" class="text-gray-400 hover:text-gray-600 text-2xl leading-none" aria-label="Sluiten">&times;</button>
+        </div>
+
+        <!-- Summary cards -->
+        <div class="grid grid-cols-2 gap-3 mb-6">
+          <div class="bg-ocean-950/5 rounded-xl p-4 text-center">
+            <p class="text-3xl font-bold text-teal-600" id="stat-current-streak">0</p>
+            <p class="text-xs text-gray-500 mt-1">Huidige reeks 🔥</p>
+          </div>
+          <div class="bg-ocean-950/5 rounded-xl p-4 text-center">
+            <p class="text-3xl font-bold text-ocean-800" id="stat-max-streak">0</p>
+            <p class="text-xs text-gray-500 mt-1">Max. reeks</p>
+          </div>
+          <div class="bg-ocean-950/5 rounded-xl p-4 text-center">
+            <p class="text-3xl font-bold text-ocean-800"><span id="stat-wins">0</span><span class="text-lg text-gray-400">/<span id="stat-played">0</span></span></p>
+            <p class="text-xs text-gray-500 mt-1">Gewonnen / Gespeeld</p>
+          </div>
+          <div class="bg-ocean-950/5 rounded-xl p-4 text-center">
+            <p class="text-3xl font-bold text-ocean-800" id="stat-winrate">0%</p>
+            <p class="text-xs text-gray-500 mt-1">Winstpercentage</p>
+          </div>
+        </div>
+
+        <!-- Guess distribution / EN: Wins per attempt count -->
+        <h3 class="text-sm font-semibold text-gray-700 mb-3">Verdeling pogingen</h3>
+        <div id="guess-distribution" class="space-y-2 mb-6">
+          <!-- Filled by JS -->
+        </div>
+
+        <!-- Community stats -->
+        <div class="mb-6 p-4 rounded-xl bg-teal-accent/10 border border-teal-accent/20 text-center">
+          <p class="text-xs uppercase tracking-widest text-gray-500 mb-1">Community vandaag</p>
+          <p class="text-2xl font-bold text-teal-700" id="stat-global-solves">—</p>
+          <p class="text-xs text-gray-500 mt-1">keer opgelost door spelers</p>
+        </div>
+
+        <!-- Recent history -->
+        <h3 class="text-sm font-semibold text-gray-700 mb-3">Recente scores</h3>
+        <div id="stats-history" class="space-y-2 max-h-48 overflow-y-auto">
+          <p class="text-gray-400 text-sm text-center py-4" id="stats-history-empty">Nog geen afgeronde spellen.</p>
+        </div>
+
+        <button data-close="stats" class="mt-6 w-full py-3 rounded-xl bg-ocean-800 text-white font-semibold hover:bg-ocean-700 transition-colors">
+          Sluiten
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info modal -->
+  <div id="modal-info" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="info-title">
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" data-close="info"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div class="bg-white text-ocean-950 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in max-h-[85vh] overflow-y-auto">
+        <div class="flex items-start justify-between mb-4">
+          <h2 id="info-title" class="text-xl font-bold">Hoe werkt Waterschaple?</h2>
+          <button data-close="info" class="text-gray-400 hover:text-gray-600 text-2xl leading-none" aria-label="Sluiten">&times;</button>
+        </div>
+        <ul class="space-y-3 text-sm text-gray-700 leading-relaxed">
+          <li>🎯 Elke dag is er <strong>één waterschap</strong> het doelwit &mdash; uit alle 20 Nederlandse waterschappen.</li>
+          <li>🔄 Je hebt <strong>6 pogingen</strong> om het juiste waterschap te vinden.</li>
+          <li>📍 Na elke gok zie je de <strong>afstand in km</strong>, een <strong>pijl</strong> richting het doel, en een <strong>nabijheidsscore</strong> (0&ndash;100%).</li>
+          <li>🟩 <strong>100%</strong> betekent dat je het juiste waterschap hebt geraden!</li>
+          <li>🧭 De pijl wijst van jouw gok <em>naar</em> het doelwaterschap.</li>
+          <li>📤 Deel je score met vrienden via de deelknop na afloop.</li>
+          <li>🔥 Win op opeenvolgende dagen om je <strong>reeks</strong> op te bouwen. Bekijk je statistieken via 📊.</li>
+          <li>🌍 Onder de titel zie je hoe vaak de puzzel <strong>vandaag wereldwijd is opgelost</strong> door alle spelers.</li>
+        </ul>
+        <button data-close="info" class="mt-6 w-full py-3 rounded-xl bg-ocean-800 text-white font-semibold hover:bg-ocean-700 transition-colors">
+          Begrepen!
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result modal (win/loss) -->
+  <div id="modal-result" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
+    <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+      <div class="bg-white text-ocean-950 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-fade-in text-center">
+        <div id="result-emoji" class="text-5xl mb-3" aria-hidden="true"></div>
+        <h2 id="result-title" class="text-2xl font-bold mb-2"></h2>
+        <p id="result-message" class="text-gray-600 text-sm mb-4"></p>
+        <div id="result-answer" class="bg-ocean-950/5 rounded-xl p-4 mb-5 hidden">
+          <p class="text-xs uppercase tracking-widest text-gray-400 mb-1">Het waterschap was</p>
+          <p id="result-answer-name" class="text-lg font-bold text-ocean-800"></p>
+        </div>
+        <div id="result-streak" class="hidden mb-4 py-2.5 px-4 rounded-xl bg-teal-accent/15 text-teal-700 text-sm font-semibold"></div>
+        <div id="share-preview" class="bg-gray-50 rounded-xl p-3 mb-5 font-mono text-sm text-gray-700 break-all"></div>
+        <div class="flex gap-3">
+          <button id="btn-share" class="flex-1 py-3 rounded-xl bg-teal-accent text-ocean-950 font-bold hover:bg-teal-400 transition-colors">
+            📋 Delen
+          </button>
+          <button id="btn-close-result" class="flex-1 py-3 rounded-xl bg-ocean-800 text-white font-semibold hover:bg-ocean-700 transition-colors">
+            Sluiten
+          </button>
+        </div>
+        <p id="share-toast" class="text-teal-600 text-sm mt-3 hidden">Gekopieerd naar klembord! 🎉</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ============================================================
+     * WATERSCHAPLE — Dutch Waterschap guessing game
+     * Dataset, game logic, Haversine distance & bearing calculations
+     * ============================================================ */
+
+    // --- Configuration ---
+    const MAX_ATTEMPTS = 6;
+    const MAX_DISTANCE_KM = 350; // Max proximity scale for the Netherlands
+    const EPOCH_DATE = new Date('2024-01-01'); // Reference date for daily puzzle numbering
+    const STORAGE_KEY = 'waterschaple_stats_v1';
+    const GLOBAL_COUNTER_API = 'https://countapi.mileshilliard.com/api/v1';
+    const GLOBAL_COUNTER_PREFIX = 'yda-waterschaple';
+    const GLOBAL_COUNT_REFRESH_MS = 60_000; // Refresh community count every minute
+
+    // Set to true for random target on each page load (testing).
+    // Set to false to use calendar-based daily target (production).
+    const USE_RANDOM_TARGET_FOR_TESTING = false;
+
+    /**
+     * Dataset of 20 Dutch regional waterschappen.
+     * Coordinates represent approximate geographic centres (lat, lng).
+     * Note: Zuiderzeeland appeared twice in the source list; included once.
+     * EN: 20 Dutch water boards with central coordinates for distance/bearing.
+     */
+    const WATERSCHAPPEN = [
+      { id: 'noorderzijlvest',              name: 'Noorderzijlvest',                    lat: 53.2, lng: 6.5 },
+      { id: 'fryslan',                      name: 'Fryslân',                            lat: 53.1, lng: 5.8 },
+      { id: 'hunze-en-aas',                 name: "Hunze en Aa's",                      lat: 53.1, lng: 6.9 },
+      { id: 'drents-overijsselse-delta',    name: 'Drents Overijsselse Delta',          lat: 52.5, lng: 6.1 },
+      { id: 'vechtstromen',                 name: 'Vechtstromen',                       lat: 52.3, lng: 6.9 },
+      { id: 'zuiderzeeland',                name: 'Zuiderzeeland',                      lat: 52.5, lng: 5.5 },
+      { id: 'vallei-en-veluwe',             name: 'Vallei en Veluwe',                   lat: 52.2, lng: 5.6 },
+      { id: 'rijn-en-ijssel',               name: 'Rijn en IJssel',                     lat: 52.0, lng: 6.3 },
+      { id: 'stichtse-rijnlanden',          name: 'Stichtse Rijnlanden',                lat: 52.0, lng: 5.0 },
+      { id: 'amstel-gooi-en-vecht',         name: 'Amstel, Gooi en Vecht',              lat: 52.3, lng: 4.9 },
+      { id: 'hollands-noorderkwartier',     name: 'Hollands Noorderkwartier',           lat: 52.6, lng: 4.9 },
+      { id: 'rijnland',                     name: 'Rijnland',                           lat: 52.2, lng: 4.5 },
+      { id: 'delfland',                     name: 'Delfland',                           lat: 52.0, lng: 4.3 },
+      { id: 'schieland-krimpenerwaard',      name: 'Schieland en de Krimpenerwaard',     lat: 51.9, lng: 4.6 },
+      { id: 'rivierenland',                 name: 'Rivierenland',                       lat: 51.9, lng: 5.3 },
+      { id: 'brabantse-delta',              name: 'Brabantse Delta',                    lat: 51.6, lng: 4.7 },
+      { id: 'de-dommel',                    name: 'De Dommel',                          lat: 51.4, lng: 5.4 },
+      { id: 'aa-en-maas',                   name: 'Aa en Maas',                         lat: 51.7, lng: 5.5 },
+      { id: 'limburg',                      name: 'Limburg',                            lat: 51.2, lng: 6.0 },
+      { id: 'scheldestromen',               name: 'Scheldestromen',                     lat: 51.4, lng: 3.9 },
+    ];
+
+    // --- Utility: Haversine distance (km) ---
+    /**
+     * Calculate great-circle distance between two lat/lng points.
+     * EN: Returns distance in kilometres using the Haversine formula.
+     */
+    function haversineDistance(lat1, lng1, lat2, lng2) {
+      const R = 6371; // Earth radius in km
+      const toRad = (deg) => (deg * Math.PI) / 180;
+      const dLat = toRad(lat2 - lat1);
+      const dLng = toRad(lng2 - lng1);
+      const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    // --- Utility: Initial bearing (degrees, 0 = North, clockwise) ---
+    /**
+     * Calculate the initial bearing from point A to point B.
+     * EN: Bearing in degrees (0° = North, 90° = East).
+     */
+    function calculateBearing(lat1, lng1, lat2, lng2) {
+      const toRad = (deg) => (deg * Math.PI) / 180;
+      const toDeg = (rad) => (rad * 180) / Math.PI;
+      const dLng = toRad(lng2 - lng1);
+      const y = Math.sin(dLng) * Math.cos(toRad(lat2));
+      const x =
+        Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+        Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLng);
+      return (toDeg(Math.atan2(y, x)) + 360) % 360;
+    }
+
+    // --- Utility: Direction arrow emoji from bearing ---
+    /**
+     * Map a bearing angle to one of 8 directional arrow emojis.
+     * EN: Converts degrees to compass arrow emoji.
+     */
+    function bearingToArrow(bearing) {
+      const arrows = [
+        { min: 337.5, max: 360, emoji: '⬆️' },
+        { min: 0,     max: 22.5,  emoji: '⬆️' },
+        { min: 22.5,  max: 67.5,  emoji: '↗️' },
+        { min: 67.5,  max: 112.5, emoji: '➡️' },
+        { min: 112.5, max: 157.5, emoji: '↘️' },
+        { min: 157.5, max: 202.5, emoji: '⬇️' },
+        { min: 202.5, max: 247.5, emoji: '↙️' },
+        { min: 247.5, max: 292.5, emoji: '⬅️' },
+        { min: 292.5, max: 337.5, emoji: '↖️' },
+      ];
+      for (const { min, max, emoji } of arrows) {
+        if (bearing >= min && bearing < max) return emoji;
+      }
+      return '⬆️';
+    }
+
+    // --- Utility: Proximity score (0–100%) ---
+    /**
+     * Convert distance to a proximity percentage.
+     * 100% = exact match, 0% = >= MAX_DISTANCE_KM.
+     */
+    function distanceToProximity(distanceKm) {
+      if (distanceKm <= 0) return 100;
+      const score = Math.round((1 - distanceKm / MAX_DISTANCE_KM) * 100);
+      return Math.max(0, Math.min(100, score));
+    }
+
+    // --- Daily target picker (calendar-based) ---
+    /**
+     * Returns the target waterschap for a given date.
+     * Cycles deterministically through the dataset.
+     * EN: Swap USE_RANDOM_TARGET_FOR_TESTING to false for production daily mode.
+     */
+    function getDailyTarget(date = new Date()) {
+      const msPerDay = 1000 * 60 * 60 * 24;
+      const dayIndex = Math.floor(
+        (Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) -
+         Date.UTC(EPOCH_DATE.getFullYear(), EPOCH_DATE.getMonth(), EPOCH_DATE.getDate())) /
+        msPerDay
+      );
+      const index = ((dayIndex % WATERSCHAPPEN.length) + WATERSCHAPPEN.length) % WATERSCHAPPEN.length;
+      return WATERSCHAPPEN[index];
+    }
+
+    /** Puzzle number for share text (days since epoch + 1) */
+    function getPuzzleNumber(date = new Date()) {
+      const msPerDay = 1000 * 60 * 60 * 24;
+      return Math.floor(
+        (Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) -
+         Date.UTC(EPOCH_DATE.getFullYear(), EPOCH_DATE.getMonth(), EPOCH_DATE.getDate())) /
+        msPerDay
+      ) + 1;
+    }
+
+    /** Emoji tile for share grid based on proximity */
+    function proximityToShareEmoji(proximity, isCorrect) {
+      if (isCorrect) return '🟩';
+      if (proximity >= 80) return '🟨';
+      if (proximity >= 50) return '🟧';
+      return '⬜';
+    }
+
+    // --- Date helpers (local timezone for daily puzzles) ---
+    /** EN: YYYY-MM-DD in local timezone */
+    function getDateKey(date = new Date()) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    /** EN: Days between two date keys (positive = date2 is later) */
+    function daysBetween(dateKey1, dateKey2) {
+      const d1 = new Date(`${dateKey1}T12:00:00`);
+      const d2 = new Date(`${dateKey2}T12:00:00`);
+      return Math.round((d2 - d1) / (1000 * 60 * 60 * 24));
+    }
+
+    // --- Stats persistence (localStorage) ---
+    /** EN: Default stats object for new players */
+    function createDefaultStats() {
+      return {
+        currentStreak: 0,
+        maxStreak: 0,
+        gamesPlayed: 0,
+        gamesWon: 0,
+        guessDistribution: [0, 0, 0, 0, 0, 0], // wins in 1–6 attempts
+        lastWinDate: null,
+        lastPlayedDate: null,
+        completedDates: [], // prevent double-recording same day
+        globalWinReportedDates: [], // prevent double-reporting wins to global counter
+        history: [],        // { puzzleNumber, date, won, attempts, grid }
+        todayGame: null,    // in-progress game for today
+      };
+    }
+
+    function loadStats() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return createDefaultStats();
+        const parsed = JSON.parse(raw);
+        return { ...createDefaultStats(), ...parsed };
+      } catch {
+        return createDefaultStats();
+      }
+    }
+
+    function saveStats(stats) {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
+      } catch (e) {
+        console.warn('[Waterschaple] Kon stats niet opslaan:', e);
+      }
+    }
+
+    /** EN: Serialize guess for storage (only ids + computed fields) */
+    function serializeGuess(guess) {
+      return {
+        waterschapId: guess.waterschap.id,
+        distance: guess.distance,
+        bearing: guess.bearing,
+        arrow: guess.arrow,
+        proximity: guess.proximity,
+        isCorrect: guess.isCorrect,
+      };
+    }
+
+    /** EN: Restore guess from stored data */
+    function deserializeGuess(data) {
+      const waterschap = WATERSCHAPPEN.find((w) => w.id === data.waterschapId);
+      if (!waterschap) return null;
+      return { waterschap, ...data };
+    }
+
+    function saveTodayGame(stats) {
+      if (USE_RANDOM_TARGET_FOR_TESTING) return; // skip persistence in test mode
+      stats.todayGame = {
+        date: getDateKey(),
+        puzzleNumber: state.puzzleNumber,
+        targetId: state.target.id,
+        guesses: state.guesses.map(serializeGuess),
+        attempts: state.attempts,
+        gameOver: state.gameOver,
+        won: state.won,
+      };
+      saveStats(stats);
+    }
+
+    /** EN: Record result once per day; returns true if newly recorded */
+    function recordGameResult(stats, { won, attempts, puzzleNumber, dateKey, grid }) {
+      if (stats.completedDates.includes(dateKey)) return false;
+
+      stats.gamesPlayed++;
+      stats.lastPlayedDate = dateKey;
+      stats.completedDates.push(dateKey);
+
+      if (won) {
+        stats.gamesWon++;
+        stats.guessDistribution[Math.min(attempts, MAX_ATTEMPTS) - 1]++;
+        // Streak: +1 if won yesterday, else reset to 1
+        if (stats.lastWinDate && daysBetween(stats.lastWinDate, dateKey) === 1) {
+          stats.currentStreak++;
+        } else if (stats.lastWinDate !== dateKey) {
+          stats.currentStreak = 1;
+        }
+        stats.lastWinDate = dateKey;
+        stats.maxStreak = Math.max(stats.maxStreak, stats.currentStreak);
+      } else {
+        stats.currentStreak = 0;
+      }
+
+      stats.history.unshift({
+        puzzleNumber,
+        date: dateKey,
+        won,
+        attempts: won ? attempts : null,
+        grid,
+      });
+      if (stats.history.length > 30) stats.history = stats.history.slice(0, 30);
+
+      saveStats(stats);
+      return true;
+    }
+
+    function getWinRate(stats) {
+      if (stats.gamesPlayed === 0) return 0;
+      return Math.round((stats.gamesWon / stats.gamesPlayed) * 100);
+    }
+
+    function renderStatsUI(stats) {
+      const winRate = getWinRate(stats);
+
+      $('#header-streak').textContent = stats.currentStreak;
+      $('#header-wins').textContent = stats.gamesWon;
+      $('#header-winrate').textContent = `${winRate}%`;
+
+      $('#stat-current-streak').textContent = stats.currentStreak;
+      $('#stat-max-streak').textContent = stats.maxStreak;
+      $('#stat-wins').textContent = stats.gamesWon;
+      $('#stat-played').textContent = stats.gamesPlayed;
+      $('#stat-winrate').textContent = `${winRate}%`;
+
+      // Guess distribution bars
+      const distEl = $('#guess-distribution');
+      const maxDist = Math.max(...stats.guessDistribution, 1);
+      distEl.innerHTML = stats.guessDistribution.map((count, i) => {
+        const pct = Math.round((count / maxDist) * 100);
+        const isMax = count === maxDist && count > 0;
+        return `
+          <div class="flex items-center gap-2 text-sm">
+            <span class="w-4 text-gray-500 font-mono text-right">${i + 1}</span>
+            <div class="flex-1 h-7 bg-gray-100 rounded-md overflow-hidden">
+              <div class="h-full ${isMax ? 'bg-teal-accent' : 'bg-ocean-800/70'} rounded-md flex items-center justify-end pr-2 transition-all duration-500"
+                   style="width: ${count > 0 ? Math.max(pct, 12) : 0}%">
+                ${count > 0 ? `<span class="text-xs font-bold ${isMax ? 'text-ocean-950' : 'text-white'}">${count}</span>` : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // History list
+      const historyEl = $('#stats-history');
+      const emptyEl = $('#stats-history-empty');
+      if (!stats.history.length) {
+        historyEl.innerHTML = '';
+        const p = document.createElement('p');
+        p.id = 'stats-history-empty';
+        p.className = 'text-gray-400 text-sm text-center py-4';
+        p.textContent = 'Nog geen afgeronde spellen.';
+        historyEl.appendChild(p);
+        return;
+      }
+
+      historyEl.innerHTML = stats.history.map((entry) => {
+        const dateLabel = new Date(`${entry.date}T12:00:00`).toLocaleDateString('nl-NL', {
+          day: 'numeric', month: 'short',
+        });
+        const scoreLabel = entry.won ? `${entry.attempts}/${MAX_ATTEMPTS}` : 'X/' + MAX_ATTEMPTS;
+        const icon = entry.won ? '✅' : '❌';
+        return `
+          <div class="flex items-center justify-between gap-2 py-2 px-3 rounded-lg bg-gray-50 text-sm">
+            <div class="min-w-0">
+              <span class="font-semibold text-ocean-800">#${entry.puzzleNumber}</span>
+              <span class="text-gray-400 ml-2">${dateLabel}</span>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <span class="font-mono text-xs text-gray-500">${scoreLabel}</span>
+              <span>${icon}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // --- Global community solve counter (shared via CountAPI) ---
+    /** EN: Unique public key per daily puzzle */
+    function getGlobalCounterKey(puzzleNumber, dateKey) {
+      return `${GLOBAL_COUNTER_PREFIX}-p${puzzleNumber}-${dateKey}`;
+    }
+
+    /** EN: Format Dutch copy for global solve count */
+    function formatGlobalSolveText(count) {
+      if (count === 0) return 'Nog niemand heeft de puzzel vandaag opgelost';
+      if (count === 1) return 'Vandaag <strong>1×</strong> opgelost door een speler';
+      return `Vandaag <strong>${count.toLocaleString('nl-NL')}×</strong> opgelost door spelers`;
+    }
+
+    /** EN: Update all UI elements showing the global solve count */
+    function renderGlobalSolveCount(count, status = 'ok') {
+      const bannerText = $('#global-solve-text');
+      const statEl = $('#stat-global-solves');
+
+      if (status === 'loading') {
+        bannerText.textContent = 'Community-teller laden…';
+        if (statEl) statEl.textContent = '…';
+        return;
+      }
+      if (status === 'test') {
+        bannerText.textContent = 'Community-teller uitgeschakeld (testmodus)';
+        if (statEl) statEl.textContent = '—';
+        return;
+      }
+      if (status === 'error' || count === null) {
+        bannerText.textContent = 'Community-teller tijdelijk niet beschikbaar';
+        if (statEl) statEl.textContent = '—';
+        return;
+      }
+
+      bannerText.innerHTML = formatGlobalSolveText(count);
+      if (statEl) {
+        statEl.textContent = count.toLocaleString('nl-NL');
+        statEl.classList.add('animate-pulse');
+        setTimeout(() => statEl.classList.remove('animate-pulse'), 600);
+      }
+    }
+
+    /** EN: Fetch current global win count without incrementing */
+    async function fetchGlobalSolveCount() {
+      if (USE_RANDOM_TARGET_FOR_TESTING) {
+        renderGlobalSolveCount(null, 'test');
+        return;
+      }
+
+      renderGlobalSolveCount(null, 'loading');
+      const key = getGlobalCounterKey(state.puzzleNumber, state.dateKey);
+
+      try {
+        const res = await fetch(`${GLOBAL_COUNTER_API}/get/${encodeURIComponent(key)}`);
+        const data = await res.json();
+        // New daily puzzles have no key yet — treat as 0
+        const count = data.error === 'Key not found' ? 0 : (parseInt(data.value, 10) || 0);
+        state.globalSolveCount = count;
+        renderGlobalSolveCount(count);
+      } catch (e) {
+        console.warn('[Waterschaple] Global counter ophalen mislukt:', e);
+        renderGlobalSolveCount(null, 'error');
+      }
+    }
+
+    /** EN: Report this player's win to the global counter (once per day) */
+    async function reportGlobalWin() {
+      if (USE_RANDOM_TARGET_FOR_TESTING || !state.won) return;
+
+      const reported = state.stats.globalWinReportedDates || [];
+      if (reported.includes(state.dateKey)) return;
+
+      const key = getGlobalCounterKey(state.puzzleNumber, state.dateKey);
+
+      try {
+        const res = await fetch(`${GLOBAL_COUNTER_API}/hit/${encodeURIComponent(key)}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const count = parseInt(data.value, 10) || 0;
+
+        state.stats.globalWinReportedDates = [...reported, state.dateKey];
+        saveStats(state.stats);
+        state.globalSolveCount = count;
+        renderGlobalSolveCount(count);
+      } catch (e) {
+        console.warn('[Waterschaple] Global counter bijwerken mislukt:', e);
+        // Still try to show latest count
+        fetchGlobalSolveCount();
+      }
+    }
+
+    /** EN: If player already won today, ensure their win is counted globally */
+    async function syncGlobalWinIfNeeded() {
+      if (!state.won || !state.resultRecorded) return;
+      await reportGlobalWin();
+    }
+
+    let globalCountInterval = null;
+
+    function startGlobalCountPolling() {
+      if (globalCountInterval) clearInterval(globalCountInterval);
+      if (USE_RANDOM_TARGET_FOR_TESTING) return;
+      globalCountInterval = setInterval(fetchGlobalSolveCount, GLOBAL_COUNT_REFRESH_MS);
+    }
+
+    // --- Game state ---
+    const state = {
+      target: null,
+      guesses: [],       // { waterschap, distance, bearing, arrow, proximity, isCorrect }
+      attempts: 0,
+      gameOver: false,
+      won: false,
+      puzzleNumber: 1,
+      highlightedIndex: -1,
+      dateKey: null,
+      stats: null,
+      resultRecorded: false,
+      globalSolveCount: null,
+    };
+
+    // --- DOM references ---
+    const $ = (sel) => document.querySelector(sel);
+    const guessInput      = $('#guess-input');
+    const autocompleteList = $('#autocomplete-list');
+    const btnGuess        = $('#btn-guess');
+    const btnInfo         = $('#btn-info');
+    const btnStats        = $('#btn-stats');
+    const statsBar        = $('#stats-bar');
+    const btnShare        = $('#btn-share');
+    const btnCloseResult  = $('#btn-close-result');
+    const guessHistory    = $('#guess-history');
+    const emptyState      = $('#empty-state');
+    const inputError      = $('#input-error');
+    const attemptCurrent  = $('#attempt-current');
+    const attemptDots     = $('#attempt-dots');
+    const gameDateLabel   = $('#game-date-label');
+    const modalInfo       = $('#modal-info');
+    const modalStats      = $('#modal-stats');
+    const modalResult     = $('#modal-result');
+
+    // --- Initialise game ---
+    function initGame() {
+      const today = new Date();
+      state.dateKey = getDateKey(today);
+      state.puzzleNumber = getPuzzleNumber(today);
+      state.stats = loadStats();
+      state.resultRecorded = state.stats.completedDates.includes(state.dateKey);
+
+      const expectedTarget = USE_RANDOM_TARGET_FOR_TESTING
+        ? null
+        : getDailyTarget(today);
+
+      // Restore in-progress game for today (if not in random test mode)
+      const saved = !USE_RANDOM_TARGET_FOR_TESTING && state.stats.todayGame;
+      const canRestore = saved
+        && state.stats.todayGame.date === state.dateKey
+        && state.stats.todayGame.puzzleNumber === state.puzzleNumber
+        && state.stats.todayGame.targetId === expectedTarget?.id;
+
+      if (canRestore) {
+        const tg = state.stats.todayGame;
+        state.target = WATERSCHAPPEN.find((w) => w.id === tg.targetId);
+        state.guesses = tg.guesses.map(deserializeGuess).filter(Boolean);
+        state.attempts = tg.attempts;
+        state.gameOver = tg.gameOver;
+        state.won = tg.won;
+      } else {
+        state.target = USE_RANDOM_TARGET_FOR_TESTING
+          ? WATERSCHAPPEN[Math.floor(Math.random() * WATERSCHAPPEN.length)]
+          : expectedTarget;
+        state.guesses = [];
+        state.attempts = 0;
+        state.gameOver = state.resultRecorded;
+        state.won = state.resultRecorded
+          ? (state.stats.history.find((h) => h.date === state.dateKey)?.won ?? false)
+          : false;
+      }
+
+      console.log('[Waterschaple debug] Doel:', state.target.name);
+
+      const dateStr = today.toLocaleDateString('nl-NL', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+      });
+      gameDateLabel.textContent = `Puzzel #${state.puzzleNumber} · ${dateStr}`;
+
+      renderAttemptDots();
+      updateAttemptLabel();
+      renderStatsUI(state.stats);
+
+      guessInput.value = '';
+      guessInput.disabled = state.gameOver;
+      btnGuess.disabled = state.gameOver;
+      hideAutocomplete();
+
+      // Rebuild guess history from restored state
+      guessHistory.innerHTML = '';
+      if (state.guesses.length === 0 && !state.gameOver) {
+        const empty = document.createElement('p');
+        empty.id = 'empty-state';
+        empty.className = 'text-white/30 text-sm text-center py-6';
+        empty.textContent = 'Nog geen pogingen. Kies een waterschap en druk op Raad.';
+        guessHistory.appendChild(empty);
+      } else {
+        state.guesses.forEach((g) => addGuessRow(g, true));
+      }
+
+      // Already completed today — show result summary inline
+      if (state.gameOver && state.resultRecorded) {
+        showCompletedBanner();
+      }
+
+      // Community counter: fetch + sync existing wins + poll
+      fetchGlobalSolveCount().then(() => syncGlobalWinIfNeeded());
+      startGlobalCountPolling();
+    }
+
+    /** EN: Banner when player already finished today's puzzle */
+    function showCompletedBanner() {
+      const entry = state.stats.history.find((h) => h.date === state.dateKey);
+      const banner = document.createElement('div');
+      banner.id = 'completed-banner';
+      banner.className = 'mb-4 py-3 px-4 rounded-xl bg-teal-accent/15 border border-teal-accent/30 text-center text-sm';
+      if (entry?.won) {
+        banner.innerHTML = `✅ Vandaag al gewonnen in <strong>${entry.attempts}</strong> ${entry.attempts === 1 ? 'poging' : 'pogingen'}! Bekijk je <button type="button" id="banner-stats-link" class="underline text-teal-light font-semibold">statistieken</button>.`;
+      } else {
+        banner.innerHTML = `❌ Vandaag al gespeeld. Het antwoord was <strong>${state.target.name}</strong>. Morgen een nieuwe puzzel!`;
+      }
+      const wrapper = document.querySelector('main .max-w-lg');
+      const existing = $('#completed-banner');
+      if (existing) existing.remove();
+      wrapper.insertBefore(banner, wrapper.firstElementChild);
+      const link = $('#banner-stats-link');
+      if (link) link.addEventListener('click', openStatsModal);
+    }
+
+    // --- Attempt dots UI ---
+    function renderAttemptDots() {
+      attemptDots.innerHTML = '';
+      for (let i = 0; i < MAX_ATTEMPTS; i++) {
+        const dot = document.createElement('div');
+        const used = i < state.attempts;
+        const current = i === state.attempts && !state.gameOver;
+        dot.className = `w-3 h-3 rounded-full transition-all duration-300 ${
+          used ? 'bg-teal-accent' : current ? 'bg-white/40 ring-2 ring-teal-accent' : 'bg-white/15'
+        }`;
+        attemptDots.appendChild(dot);
+      }
+    }
+
+    function updateAttemptLabel() {
+      attemptCurrent.textContent = state.gameOver
+        ? state.attempts
+        : Math.min(state.attempts + 1, MAX_ATTEMPTS);
+    }
+
+    // --- Autocomplete ---
+    function filterWaterschappen(query) {
+      const q = query.trim().toLowerCase();
+      if (!q) return WATERSCHAPPEN;
+      return WATERSCHAPPEN.filter((w) => w.name.toLowerCase().includes(q));
+    }
+
+    function showAutocomplete(items) {
+      autocompleteList.innerHTML = '';
+      if (items.length === 0) {
+        hideAutocomplete();
+        return;
+      }
+      items.forEach((w, i) => {
+        const li = document.createElement('li');
+        li.role = 'option';
+        li.dataset.id = w.id;
+        li.className = `px-4 py-2.5 cursor-pointer text-ocean-950 text-sm transition-colors ${
+          i === state.highlightedIndex ? 'bg-teal-accent/20' : 'hover:bg-ocean-800/10'
+        }`;
+        li.textContent = w.name;
+        li.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          selectWaterschap(w);
+        });
+        autocompleteList.appendChild(li);
+      });
+      autocompleteList.classList.remove('hidden');
+      guessInput.setAttribute('aria-expanded', 'true');
+    }
+
+    function hideAutocomplete() {
+      autocompleteList.classList.add('hidden');
+      autocompleteList.innerHTML = '';
+      guessInput.setAttribute('aria-expanded', 'false');
+      state.highlightedIndex = -1;
+    }
+
+    function selectWaterschap(w) {
+      guessInput.value = w.name;
+      guessInput.dataset.selectedId = w.id;
+      hideAutocomplete();
+    }
+
+    function getSelectedWaterschap() {
+      const id = guessInput.dataset.selectedId;
+      if (id) {
+        const byId = WATERSCHAPPEN.find((w) => w.id === id);
+        if (byId && byId.name === guessInput.value.trim()) return byId;
+      }
+      // Fallback: exact name match
+      return WATERSCHAPPEN.find(
+        (w) => w.name.toLowerCase() === guessInput.value.trim().toLowerCase()
+      );
+    }
+
+    // --- Submit guess ---
+    function submitGuess() {
+      if (state.gameOver) return;
+
+      const selected = getSelectedWaterschap();
+      if (!selected) {
+        showError('Kies een geldig waterschap uit de lijst.');
+        return;
+      }
+      hideError();
+
+      // Prevent duplicate guesses
+      if (state.guesses.some((g) => g.waterschap.id === selected.id)) {
+        showError('Je hebt dit waterschap al geraden.');
+        return;
+      }
+
+      const distance = haversineDistance(
+        selected.lat, selected.lng,
+        state.target.lat, state.target.lng
+      );
+      const bearing = calculateBearing(
+        selected.lat, selected.lng,
+        state.target.lat, state.target.lng
+      );
+      const arrow = bearingToArrow(bearing);
+      const proximity = distanceToProximity(distance);
+      const isCorrect = selected.id === state.target.id;
+
+      const guess = { waterschap: selected, distance, bearing, arrow, proximity, isCorrect };
+      state.guesses.push(guess);
+      state.attempts++;
+
+      // Remove empty state on first guess
+      const empty = $('#empty-state');
+      if (empty) empty.remove();
+
+      addGuessRow(guess);
+      renderAttemptDots();
+      updateAttemptLabel();
+
+      guessInput.value = '';
+      delete guessInput.dataset.selectedId;
+      guessInput.focus();
+
+      if (isCorrect) {
+        state.gameOver = true;
+        state.won = true;
+        saveTodayGame(state.stats);
+        endGame();
+      } else if (state.attempts >= MAX_ATTEMPTS) {
+        state.gameOver = true;
+        state.won = false;
+        saveTodayGame(state.stats);
+        endGame();
+      } else {
+        saveTodayGame(state.stats);
+      }
+    }
+
+    // --- Render guess row ---
+    function addGuessRow(guess, skipAnimation = false) {
+      const { waterschap, distance, arrow, proximity, isCorrect } = guess;
+      const row = document.createElement('div');
+      row.className = 'guess-row bg-white/8 backdrop-blur-sm border border-white/10 rounded-xl p-3 sm:p-4 flex items-center gap-3';
+
+      const proximityColor = isCorrect
+        ? 'text-green-400'
+        : proximity >= 80
+        ? 'text-yellow-400'
+        : proximity >= 50
+        ? 'text-orange-400'
+        : 'text-red-400';
+
+      row.innerHTML = `
+        <div class="flex-1 min-w-0">
+          <p class="font-semibold text-sm sm:text-base truncate">${waterschap.name}</p>
+          <p class="text-white/50 text-xs mt-0.5">${Math.round(distance)} km</p>
+        </div>
+        <div class="text-2xl sm:text-3xl flex-shrink-0" title="Richting doel" aria-label="Richting: ${arrow}">${arrow}</div>
+        <div class="flex-shrink-0 text-right w-16 sm:w-20">
+          <p class="${proximityColor} font-bold text-lg sm:text-xl">${proximity}%</p>
+          <div class="mt-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
+            <div class="h-full rounded-full proximity-bar transition-all duration-700"
+                 style="width: ${proximity}%"></div>
+          </div>
+        </div>
+      `;
+
+      guessHistory.appendChild(row);
+      if (!skipAnimation) {
+        requestAnimationFrame(() => row.classList.add('visible'));
+      } else {
+        row.classList.add('visible');
+      }
+    }
+
+    // --- End game modal ---
+    async function endGame() {
+      guessInput.disabled = true;
+      btnGuess.disabled = true;
+
+      const shareText = buildShareText();
+      const grid = state.guesses.map((g) => proximityToShareEmoji(g.proximity, g.isCorrect)).join('');
+
+      // Record stats once per day
+      if (!state.resultRecorded) {
+        const prevStreak = state.stats.currentStreak;
+        recordGameResult(state.stats, {
+          won: state.won,
+          attempts: state.attempts,
+          puzzleNumber: state.puzzleNumber,
+          dateKey: state.dateKey,
+          grid,
+        });
+        state.resultRecorded = true;
+        renderStatsUI(state.stats);
+
+        // Report win to global community counter (await so modal shows updated count)
+        if (state.won) await reportGlobalWin();
+
+        const streakEl = $('#result-streak');
+        if (state.won) {
+          streakEl.classList.remove('hidden');
+          const newStreak = state.stats.currentStreak;
+          if (newStreak === 1 && prevStreak === 0) {
+            streakEl.textContent = '🔥 Reeks gestart! 1 dag op rij.';
+          } else if (newStreak > prevStreak) {
+            streakEl.textContent = `🔥 Reeks: ${newStreak} ${newStreak === 1 ? 'dag' : 'dagen'} op rij!`;
+          } else {
+            streakEl.textContent = `🔥 Huidige reeks: ${newStreak} ${newStreak === 1 ? 'dag' : 'dagen'}`;
+          }
+        } else {
+          streakEl.classList.remove('hidden');
+          streakEl.textContent = prevStreak > 0
+            ? `💔 Reeks verbroken (was ${prevStreak} ${prevStreak === 1 ? 'dag' : 'dagen'})`
+            : 'Morgen een nieuwe kans op een reeks!';
+        }
+      } else {
+        $('#result-streak').classList.add('hidden');
+      }
+
+      $('#share-preview').textContent = shareText;
+
+      if (state.won) {
+        $('#result-emoji').textContent = '🏆';
+        $('#result-title').textContent = 'Gefeliciteerd!';
+        const communityNote = state.globalSolveCount != null
+          ? ` Jij bent een van de ${state.globalSolveCount.toLocaleString('nl-NL')} spelers die het vandaag raadden!`
+          : '';
+        $('#result-message').textContent =
+          `Je hebt het juiste waterschap gevonden in ${state.attempts} ${state.attempts === 1 ? 'poging' : 'pogingen'}!${communityNote}`;
+        $('#result-answer').classList.add('hidden');
+      } else {
+        $('#result-emoji').textContent = '🌊';
+        $('#result-title').textContent = 'Volgende keer beter!';
+        $('#result-message').textContent = 'Je pogingen zijn op. Het juiste waterschap was:';
+        $('#result-answer').classList.remove('hidden');
+        $('#result-answer-name').textContent = state.target.name;
+      }
+
+      modalResult.classList.remove('hidden');
+    }
+
+    function buildShareText() {
+      const tiles = state.guesses
+        .map((g) => proximityToShareEmoji(g.proximity, g.isCorrect))
+        .join('');
+      const padding = '⬜'.repeat(MAX_ATTEMPTS - state.guesses.length);
+      return `Waterschaple #${state.puzzleNumber} ${state.won ? state.attempts : 'X'}/${MAX_ATTEMPTS} 🌊${tiles}${padding}`;
+    }
+
+    // --- Share to clipboard ---
+    async function shareScore() {
+      const text = buildShareText();
+      try {
+        await navigator.clipboard.writeText(text);
+        $('#share-toast').classList.remove('hidden');
+        setTimeout(() => $('#share-toast').classList.add('hidden'), 2500);
+      } catch {
+        // Fallback for older browsers
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        $('#share-toast').classList.remove('hidden');
+        setTimeout(() => $('#share-toast').classList.add('hidden'), 2500);
+      }
+    }
+
+    // --- Error handling ---
+    function showError(msg) {
+      inputError.textContent = msg;
+      inputError.classList.remove('hidden');
+    }
+    function hideError() {
+      inputError.classList.add('hidden');
+    }
+
+    // --- Event listeners ---
+    guessInput.addEventListener('input', () => {
+      delete guessInput.dataset.selectedId;
+      hideError();
+      const items = filterWaterschappen(guessInput.value);
+      state.highlightedIndex = 0;
+      showAutocomplete(items);
+    });
+
+    guessInput.addEventListener('focus', () => {
+      const items = filterWaterschappen(guessInput.value);
+      showAutocomplete(items);
+    });
+
+    guessInput.addEventListener('blur', () => {
+      setTimeout(hideAutocomplete, 150);
+    });
+
+    guessInput.addEventListener('keydown', (e) => {
+      const items = filterWaterschappen(guessInput.value);
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        state.highlightedIndex = Math.min(state.highlightedIndex + 1, items.length - 1);
+        showAutocomplete(items);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        state.highlightedIndex = Math.max(state.highlightedIndex - 1, 0);
+        showAutocomplete(items);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        if (state.highlightedIndex >= 0 && items[state.highlightedIndex]) {
+          selectWaterschap(items[state.highlightedIndex]);
+        }
+        submitGuess();
+      } else if (e.key === 'Escape') {
+        hideAutocomplete();
+      }
+    });
+
+    btnGuess.addEventListener('click', submitGuess);
+
+    function openStatsModal() {
+      renderStatsUI(state.stats);
+      if (state.globalSolveCount != null) {
+        $('#stat-global-solves').textContent = state.globalSolveCount.toLocaleString('nl-NL');
+      }
+      fetchGlobalSolveCount();
+      modalStats.classList.remove('hidden');
+    }
+
+    // Stats modal
+    btnStats.addEventListener('click', openStatsModal);
+    statsBar.addEventListener('click', openStatsModal);
+    modalStats.querySelectorAll('[data-close="stats"]').forEach((el) => {
+      el.addEventListener('click', () => modalStats.classList.add('hidden'));
+    });
+
+    // Info modal
+    btnInfo.addEventListener('click', () => modalInfo.classList.remove('hidden'));
+    modalInfo.querySelectorAll('[data-close="info"]').forEach((el) => {
+      el.addEventListener('click', () => modalInfo.classList.add('hidden'));
+    });
+
+    // Result modal
+    btnShare.addEventListener('click', shareScore);
+    btnCloseResult.addEventListener('click', () => modalResult.classList.add('hidden'));
+
+    // Close modals on Escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        modalInfo.classList.add('hidden');
+        modalStats.classList.add('hidden');
+        if (!state.gameOver) modalResult.classList.add('hidden');
+      }
+    });
+
+    // --- Start ---
+    initGame();
+  </script>
+</body>
+</html>
