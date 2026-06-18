@@ -1,0 +1,107 @@
+---
+/** Interactieve spelinterface — autocomplete, pogingen, resultatentabel */
+---
+
+<main class="relative z-10 flex-1 px-4 py-6 sm:py-8">
+  <div class="max-w-lg mx-auto">
+    <div class="flex items-center justify-between mb-4">
+      <p class="text-sm text-white/60">
+        Poging <span id="attempt-current" class="text-orange-accent font-semibold">1</span>
+        van <span class="font-semibold">6</span>
+      </p>
+      <div class="flex gap-1.5" id="attempt-dots" aria-hidden="true"></div>
+    </div>
+
+    <section id="hints-section" class="mb-6" aria-label="Hints">
+      <h2 class="text-xs uppercase tracking-widest text-white/40 mb-3 font-semibold">Hints</h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div
+          id="hint-flag-card"
+          class="rounded-xl border border-white/10 bg-white/5 p-4 flex flex-col items-center gap-2 opacity-40"
+        >
+          <p class="text-xs font-semibold text-white/50 w-full text-left">
+            <span class="text-orange-accent">1.</span> Gemeentevlag
+          </p>
+          <div
+            id="hint-flag-locked"
+            class="flex flex-col items-center justify-center h-20 w-full rounded-lg bg-white/5 text-white/30 text-sm"
+          >
+            <span aria-hidden="true" class="text-2xl mb-1">🏳️</span>
+            <span>Na 2e poging</span>
+          </div>
+          <img
+            id="hint-flag-img"
+            alt=""
+            class="hidden h-20 w-auto max-w-full object-contain rounded-lg bg-white/90 p-2 shadow-inner"
+          />
+          <p
+            id="hint-flag-missing"
+            class="hidden h-20 w-full flex items-center justify-center rounded-lg bg-white/5 text-white/40 text-xs text-center px-2"
+          >
+            Vlag niet beschikbaar
+          </p>
+        </div>
+        <div
+          id="hint-province-card"
+          class="rounded-xl border border-white/10 bg-white/5 p-4 flex flex-col gap-2 opacity-40"
+        >
+          <p class="text-xs font-semibold text-white/50">
+            <span class="text-orange-accent">2.</span> Provincie
+          </p>
+          <div
+            id="hint-province-locked"
+            class="flex flex-col items-center justify-center h-20 rounded-lg bg-white/5 text-white/30 text-sm"
+          >
+            <span aria-hidden="true" class="text-2xl mb-1">🗺️</span>
+            <span>Na 4e poging</span>
+          </div>
+          <p id="hint-province-text" class="hidden text-lg font-bold text-orange-light text-center py-4"></p>
+        </div>
+      </div>
+    </section>
+
+    <div class="relative mb-6" id="combobox-wrapper">
+      <label for="guess-input" class="sr-only">Kies een gemeente</label>
+      <div class="flex gap-2">
+        <div class="relative flex-1">
+          <input
+            id="guess-input"
+            type="text"
+            autocomplete="off"
+            placeholder="Zoek een gemeente…"
+            class="w-full px-4 py-3.5 rounded-xl bg-white text-royal-950 placeholder:text-gray-400 border-2 border-transparent focus:border-orange-accent focus:outline-none transition-colors text-base shadow-lg"
+            role="combobox"
+            aria-expanded="false"
+            aria-controls="autocomplete-list"
+            aria-autocomplete="list"
+          />
+          <ul
+            id="autocomplete-list"
+            role="listbox"
+            class="autocomplete-list absolute left-0 right-0 top-full mt-1 max-h-52 overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-100 z-50 hidden"
+          ></ul>
+        </div>
+        <button
+          id="btn-guess"
+          type="button"
+          class="px-5 py-3.5 rounded-xl bg-orange-accent hover:bg-orange-400 text-royal-950 font-bold transition-all hover:scale-105 active:scale-95 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+        >Raad</button>
+      </div>
+      <p id="input-error" class="text-red-400 text-sm mt-2 hidden" role="alert"></p>
+    </div>
+
+    <section aria-label="Gissingsgeschiedenis">
+      <h2 class="text-xs uppercase tracking-widest text-white/40 mb-3 font-semibold">Jouw pogingen</h2>
+      <div id="guess-history" class="space-y-2 min-h-[48px]">
+        <p id="empty-state" class="text-white/30 text-sm text-center py-6">
+          Nog geen pogingen. Kies een gemeente en druk op Raad.
+        </p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+  import { initGemeentedle } from '../scripts/game-client';
+  initGemeentedle();
+</script>

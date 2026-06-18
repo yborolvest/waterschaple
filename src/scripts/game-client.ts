@@ -1,21 +1,5 @@
-import {
-  MAX_ATTEMPTS,
-  GLOBAL_COUNT_REFRESH_MS,
-  USE_RANDOM_TARGET_FOR_TESTING,
-} from '../lib/config';
-import { WATERSCHAPPEN } from '../data/waterschappen';
-import {
-  haversineDistance,
-  calculateBearing,
-  bearingToArrow,
-  distanceToProximity,
-  getDailyTarget,
-  getYesterdayTarget,
-  getYesterdayDate,
-  getPuzzleNumber,
-  getDateKey,
-  proximityToShareEmoji,
-} from '../lib/game-logic';
+import { MAX_ATTEMPTS, GLOBAL_COUNT_REFRESH_MS, USE_RANDOM_TARGET_FOR_TESTING, HINT_FLAG_AFTER_ATTEMPT, HINT_PROVINCE_AFTER_ATTEMPT } from '../lib/config';
+import { proximityToShareEmoji } from '../lib/game-logic';
 import {
   loadStats,
   saveStats,
@@ -24,17 +8,21 @@ import {
   recordGameResult,
   getWinRate,
 } from '../lib/stats';
-import {
-  formatGlobalSolveText,
-  fetchGlobalSolveCount,
-  reportGlobalWin,
-} from '../lib/global-counter';
-import type { GameState, Guess, PlayerStats, Waterschap } from '../lib/types';
+import { formatGlobalSolveText } from '../lib/global-counter';
+import { openModal, closeModal as closeA11yModal } from '../lib/modal-a11y';
+import type {
+  DailyMeta,
+  GameState,
+  GemeentePublic,
+  Guess,
+  GuessApiResponse,
+  PlayerStats,
+  UnlockedHints,
+} from '../lib/types';
 
 const $ = (sel: string) => document.querySelector<HTMLElement>(sel);
 
 const state: GameState = {
-  target: null,
   guesses: [],
   attempts: 0,
   gameOver: false,
@@ -45,9 +33,26 @@ const state: GameState = {
   stats: null,
   resultRecorded: false,
   globalSolveCount: null,
+  gemeenten: [],
+  targetName: null,
+  targetProvince: null,
+  yesterday: null,
+  unlockedHints: { flagUrl: null, province: null },
 };
 
 let globalCountInterval: ReturnType<typeof setInterval> | null = null;
+let lastHistoricalWins: number | null = null;
+
+async function fetchDailyMeta(): Promise<DailyMeta | null> {
+  try {
+    const res = await fetch('/api/daily');
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return (await res.json()) as DailyMeta;
+  } catch (e) {
+    console.warn('[Gemeentedle] Daily meta ophalen mislukt:', e);
+    return null;
+  }
+}
 
 function renderStatsUI(stats: PlayerStats) {
   const winRate = getWinRate(stats);
@@ -72,9 +77,9 @@ function renderStatsUI(stats: PlayerStats) {
         <div class="flex items-center gap-2 text-sm">
           <span class="w-4 text-gray-500 font-mono text-right">${i + 1}</span>
           <div class="flex-1 h-7 bg-gray-100 rounded-md overflow-hidden">
-            <div class="h-full ${isMax ? 'bg-teal-accent' : 'bg-ocean-800/70'} rounded-md flex items-center justify-end pr-2 transition-all duration-500"
+            <div class="h-full ${isMax ? 'bg-orange-accent' : 'bg-royal-800/70'} rounded-md flex items-center justify-end pr-2 transition-all duration-500"
                  style="width: ${count > 0 ? Math.max(pct, 12) : 0}%">
-              ${count > 0 ? `<span class="text-xs font-bold ${isMax ? 'text-ocean-950' : 'text-white'}">${count}</span>` : ''}
+              ${count > 0 ? `<span class="text-xs font-bold ${isMax ? 'text-royal-950' : 'text-white'}">${count}</span>` : ''}
             </div>
           </div>
         </div>
@@ -100,7 +105,7 @@ function renderStatsUI(stats: PlayerStats) {
       return `
         <div class="flex items-center justify-between gap-2 py-2 px-3 rounded-lg bg-gray-50 text-sm">
           <div class="min-w-0">
-            <span class="font-semibold text-ocean-800">#${entry.puzzleNumber}</span>
+            <span class="font-semibold text-royal-800">#${entry.puzzleNumber}</span>
             <span class="text-gray-400 ml-2">${dateLabel}</span>
           </div>
           <div class="flex items-center gap-2 flex-shrink-0">
@@ -143,32 +148,18 @@ function renderGlobalSolveCount(count: number | null, status: 'ok' | 'loading' |
 
 async function refreshGlobalSolveCount() {
   if (!state.dateKey) return;
-  renderGlobalSolveCount(null, 'loading');
-  const count = await fetchGlobalSolveCount(state.puzzleNumber, state.dateKey);
-  if (count === null && !USE_RANDOM_TARGET_FOR_TESTING) {
-    renderGlobalSolveCount(null, 'error');
-    return;
-  }
   if (USE_RANDOM_TARGET_FOR_TESTING) {
     renderGlobalSolveCount(null, 'test');
     return;
   }
-  state.globalSolveCount = count;
-  renderGlobalSolveCount(count);
-}
-
-async function syncGlobalWinIfNeeded() {
-  if (!state.won || !state.resultRecorded || !state.stats || !state.dateKey) return;
-  const reported = state.stats.globalWinReportedDates || [];
-  if (reported.includes(state.dateKey)) return;
-
-  const count = await reportGlobalWin(state.puzzleNumber, state.dateKey);
-  if (count !== null) {
-    state.stats.globalWinReportedDates = [...reported, state.dateKey];
-    saveStats(state.stats);
-    state.globalSolveCount = count;
-    renderGlobalSolveCount(count);
+  renderGlobalSolveCount(null, 'loading');
+  const meta = await fetchDailyMeta();
+  if (!meta) {
+    renderGlobalSolveCount(null, 'error');
+    return;
   }
+  state.globalSolveCount = meta.globalSolveCount;
+  renderGlobalSolveCount(meta.globalSolveCount);
 }
 
 function startGlobalCountPolling() {
@@ -178,15 +169,17 @@ function startGlobalCountPolling() {
 }
 
 function saveTodayGame() {
-  if (USE_RANDOM_TARGET_FOR_TESTING || !state.stats || !state.target || !state.dateKey) return;
+  if (USE_RANDOM_TARGET_FOR_TESTING || !state.stats || !state.dateKey) return;
   state.stats.todayGame = {
     date: state.dateKey,
     puzzleNumber: state.puzzleNumber,
-    targetId: state.target.id,
     guesses: state.guesses.map(serializeGuess),
     attempts: state.attempts,
     gameOver: state.gameOver,
     won: state.won,
+    targetName: state.targetName ?? undefined,
+    targetProvince: state.targetProvince ?? undefined,
+    unlockedHints: state.unlockedHints,
   };
   saveStats(state.stats);
 }
@@ -199,7 +192,7 @@ function renderAttemptDots() {
     const used = i < state.attempts;
     const current = i === state.attempts && !state.gameOver;
     dot.className = `w-3 h-3 rounded-full transition-all duration-300 ${
-      used ? 'bg-teal-accent' : current ? 'bg-white/40 ring-2 ring-teal-accent' : 'bg-white/15'
+      used ? 'bg-orange-accent' : current ? 'bg-white/40 ring-2 ring-orange-accent' : 'bg-white/15'
     }`;
     attemptDots.appendChild(dot);
   }
@@ -211,31 +204,39 @@ function updateAttemptLabel() {
   );
 }
 
-function filterWaterschappen(query: string): Waterschap[] {
+function filterGemeenten(query: string): GemeentePublic[] {
   const q = query.trim().toLowerCase();
-  if (!q) return WATERSCHAPPEN;
-  return WATERSCHAPPEN.filter((w) => w.name.toLowerCase().includes(q));
+  if (!q) return state.gemeenten;
+  return state.gemeenten.filter(
+    (g) =>
+      g.name.toLowerCase().includes(q) ||
+      g.province.toLowerCase().includes(q),
+  );
 }
 
-function showAutocomplete(items: Waterschap[]) {
+function showAutocomplete(items: GemeentePublic[]) {
   const autocompleteList = $('#autocomplete-list')!;
   const guessInput = $('#guess-input') as HTMLInputElement;
+  if (!guessInput.value.trim()) {
+    hideAutocomplete();
+    return;
+  }
   autocompleteList.innerHTML = '';
   if (items.length === 0) {
     hideAutocomplete();
     return;
   }
-  items.forEach((w, i) => {
+  items.forEach((g, i) => {
     const li = document.createElement('li');
     li.role = 'option';
-    li.dataset.id = w.id;
-    li.className = `px-4 py-2.5 cursor-pointer text-ocean-950 text-sm transition-colors ${
-      i === state.highlightedIndex ? 'bg-teal-accent/20' : 'hover:bg-ocean-800/10'
+    li.dataset.id = g.id;
+    li.className = `px-4 py-2.5 cursor-pointer text-royal-950 text-sm transition-colors ${
+      i === state.highlightedIndex ? 'bg-orange-accent/20' : 'hover:bg-royal-800/10'
     }`;
-    li.textContent = w.name;
+    li.innerHTML = `<span class="font-medium">${g.name}</span> <span class="text-gray-400 text-xs">(${g.province})</span>`;
     li.addEventListener('mousedown', (e) => {
       e.preventDefault();
-      selectWaterschap(w);
+      selectGemeente(g);
     });
     autocompleteList.appendChild(li);
   });
@@ -252,21 +253,21 @@ function hideAutocomplete() {
   state.highlightedIndex = -1;
 }
 
-function selectWaterschap(w: Waterschap) {
+function selectGemeente(g: GemeentePublic) {
   const guessInput = $('#guess-input') as HTMLInputElement;
-  guessInput.value = w.name;
-  guessInput.dataset.selectedId = w.id;
+  guessInput.value = g.name;
+  guessInput.dataset.selectedId = g.id;
   hideAutocomplete();
 }
 
-function getSelectedWaterschap(): Waterschap | undefined {
+function getSelectedGemeente(): GemeentePublic | undefined {
   const guessInput = $('#guess-input') as HTMLInputElement;
   const id = guessInput.dataset.selectedId;
   if (id) {
-    const byId = WATERSCHAPPEN.find((w) => w.id === id);
+    const byId = state.gemeenten.find((g) => g.id === id);
     if (byId && byId.name === guessInput.value.trim()) return byId;
   }
-  return WATERSCHAPPEN.find((w) => w.name.toLowerCase() === guessInput.value.trim().toLowerCase());
+  return state.gemeenten.find((g) => g.name.toLowerCase() === guessInput.value.trim().toLowerCase());
 }
 
 function showError(msg: string) {
@@ -279,8 +280,74 @@ function hideError() {
   $('#input-error')!.classList.add('hidden');
 }
 
+function mergeHints(current: UnlockedHints, next: UnlockedHints): UnlockedHints {
+  return {
+    flagUrl: next.flagUrl ?? current.flagUrl,
+    province: next.province ?? current.province,
+  };
+}
+
+function renderHints() {
+  const section = $('#hints-section')!;
+  const flagUnlocked = state.attempts >= HINT_FLAG_AFTER_ATTEMPT && !state.won;
+  const provinceUnlocked = state.attempts >= HINT_PROVINCE_AFTER_ATTEMPT && !state.won;
+
+  section.classList.remove('hidden');
+
+  const flagCard = $('#hint-flag-card')!;
+  const flagLocked = $('#hint-flag-locked')!;
+  const flagImg = $('#hint-flag-img') as HTMLImageElement;
+  const flagMissing = $('#hint-flag-missing')!;
+
+  flagCard.classList.toggle('opacity-40', !flagUnlocked);
+  flagCard.classList.toggle('border-orange-accent/30', flagUnlocked);
+  flagLocked.classList.toggle('hidden', flagUnlocked);
+  flagImg.classList.add('hidden');
+  flagMissing.classList.add('hidden');
+
+  if (flagUnlocked) {
+    if (state.unlockedHints.flagUrl) {
+      flagImg.src = state.unlockedHints.flagUrl;
+      flagImg.alt = 'Gemeentevlag (hint)';
+      flagImg.classList.remove('hidden');
+    } else {
+      flagMissing.classList.remove('hidden');
+    }
+  }
+
+  const provinceCard = $('#hint-province-card')!;
+  const provinceLocked = $('#hint-province-locked')!;
+  const provinceText = $('#hint-province-text')!;
+
+  provinceCard.classList.toggle('opacity-40', !provinceUnlocked);
+  provinceCard.classList.toggle('border-orange-accent/30', provinceUnlocked);
+  provinceLocked.classList.toggle('hidden', provinceUnlocked);
+  provinceText.classList.toggle('hidden', !provinceUnlocked);
+
+  if (provinceUnlocked && state.unlockedHints.province) {
+    provinceText.textContent = state.unlockedHints.province;
+  }
+}
+
+async function fetchUnlockedHints(attempts: number): Promise<UnlockedHints | null> {
+  if (!state.dateKey || attempts < 1) return null;
+  try {
+    const params = new URLSearchParams({
+      puzzle: String(state.puzzleNumber),
+      date: state.dateKey,
+      attempts: String(attempts),
+    });
+    const res = await fetch(`/api/daily/hints?${params}`);
+    if (!res.ok) return null;
+    const data = (await res.json()) as { hints: UnlockedHints };
+    return data.hints;
+  } catch {
+    return null;
+  }
+}
+
 function addGuessRow(guess: Guess, skipAnimation = false) {
-  const { waterschap, distance, arrow, proximity, isCorrect } = guess;
+  const { gemeente, distance, arrow, proximity, isCorrect } = guess;
   const row = document.createElement('div');
   row.className =
     'guess-row bg-white/8 backdrop-blur-sm border border-white/10 rounded-xl p-3 sm:p-4 flex items-center gap-3';
@@ -295,7 +362,7 @@ function addGuessRow(guess: Guess, skipAnimation = false) {
 
   row.innerHTML = `
     <div class="flex-1 min-w-0">
-      <p class="font-semibold text-sm sm:text-base truncate">${waterschap.name}</p>
+      <p class="font-semibold text-sm sm:text-base truncate">${gemeente.name} <span class="text-white/40 font-normal">(${gemeente.province})</span></p>
       <p class="text-white/50 text-xs mt-0.5">${Math.round(distance)} km</p>
     </div>
     <div class="text-2xl sm:text-3xl flex-shrink-0" title="Richting doel" aria-label="Richting: ${arrow}">${arrow}</div>
@@ -315,7 +382,7 @@ function addGuessRow(guess: Guess, skipAnimation = false) {
 function buildShareText(): string {
   const tiles = state.guesses.map((g) => proximityToShareEmoji(g.proximity, g.isCorrect)).join('');
   const padding = '⬜'.repeat(MAX_ATTEMPTS - state.guesses.length);
-  return `Waterschaple #${state.puzzleNumber} ${state.won ? state.attempts : 'X'}/${MAX_ATTEMPTS} 🌊${tiles}${padding}`;
+  return `Gemeentedle #${state.puzzleNumber} ${state.won ? state.attempts : 'X'}/${MAX_ATTEMPTS} 🏛️${tiles}${padding}`;
 }
 
 async function endGame() {
@@ -338,19 +405,6 @@ async function endGame() {
     });
     state.resultRecorded = true;
     renderStatsUI(state.stats);
-
-    if (state.won) {
-      const reported = state.stats.globalWinReportedDates || [];
-      if (!reported.includes(state.dateKey)) {
-        const count = await reportGlobalWin(state.puzzleNumber, state.dateKey);
-        if (count !== null) {
-          state.stats.globalWinReportedDates = [...reported, state.dateKey];
-          saveStats(state.stats);
-          state.globalSolveCount = count;
-          renderGlobalSolveCount(count);
-        }
-      }
-    }
 
     const streakEl = $('#result-streak')!;
     if (state.won) {
@@ -376,6 +430,17 @@ async function endGame() {
 
   $('#share-preview')!.textContent = shareText;
 
+  const historicalEl = $('#result-historical')!;
+  if (state.won && lastHistoricalWins !== null) {
+    historicalEl.classList.remove('hidden');
+    historicalEl.textContent =
+      lastHistoricalWins === 1
+        ? 'Deze gemeente is wereldwijd 1× als dagpuzzel correct geraden.'
+        : `Deze gemeente is wereldwijd ${lastHistoricalWins.toLocaleString('nl-NL')}× als dagpuzzel correct geraden.`;
+  } else {
+    historicalEl.classList.add('hidden');
+  }
+
   if (state.won) {
     $('#result-emoji')!.textContent = '🏆';
     $('#result-title')!.textContent = 'Gefeliciteerd!';
@@ -384,64 +449,110 @@ async function endGame() {
         ? ` Jij bent een van de ${state.globalSolveCount.toLocaleString('nl-NL')} spelers die het vandaag raadden!`
         : '';
     $('#result-message')!.textContent =
-      `Je hebt het juiste waterschap gevonden in ${state.attempts} ${state.attempts === 1 ? 'poging' : 'pogingen'}!${communityNote}`;
+      `Je hebt de juiste gemeente gevonden in ${state.attempts} ${state.attempts === 1 ? 'poging' : 'pogingen'}!${communityNote}`;
     $('#result-answer')!.classList.add('hidden');
   } else {
-    $('#result-emoji')!.textContent = '🌊';
+    $('#result-emoji')!.textContent = '🏛️';
     $('#result-title')!.textContent = 'Volgende keer beter!';
-    $('#result-message')!.textContent = 'Je pogingen zijn op. Het juiste waterschap was:';
+    $('#result-message')!.textContent = 'Je pogingen zijn op. De juiste gemeente was:';
     $('#result-answer')!.classList.remove('hidden');
-    $('#result-answer-name')!.textContent = state.target?.name ?? '';
+    $('#result-answer-name')!.textContent = state.targetName ?? '—';
+    $('#result-answer-province')!.textContent = state.targetProvince ?? '';
   }
 
-  $('#modal-result')!.classList.remove('hidden');
+  openModal('result');
 }
 
-function submitGuess() {
-  if (state.gameOver || !state.target) return;
+async function submitGuess() {
+  if (state.gameOver || !state.dateKey) return;
 
-  const selected = getSelectedWaterschap();
+  const selected = getSelectedGemeente();
   if (!selected) {
-    showError('Kies een geldig waterschap uit de lijst.');
+    showError('Kies een geldige gemeente uit de lijst.');
     return;
   }
   hideError();
 
-  if (state.guesses.some((g) => g.waterschap.id === selected.id)) {
-    showError('Je hebt dit waterschap al geraden.');
+  if (state.guesses.some((g) => g.gemeente.id === selected.id)) {
+    showError('Je hebt deze gemeente al geraden.');
     return;
   }
 
-  const distance = haversineDistance(selected.lat, selected.lng, state.target.lat, state.target.lng);
-  const bearing = calculateBearing(selected.lat, selected.lng, state.target.lat, state.target.lng);
-  const arrow = bearingToArrow(bearing);
-  const proximity = distanceToProximity(distance);
-  const isCorrect = selected.id === state.target.id;
+  const nextAttempt = state.attempts + 1;
 
-  const guess: Guess = { waterschap: selected, distance, bearing, arrow, proximity, isCorrect };
+  let data: GuessApiResponse;
+  try {
+    const res = await fetch('/api/daily', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        gemeenteId: selected.id,
+        puzzleNumber: state.puzzleNumber,
+        dateKey: state.dateKey,
+        attemptNumber: nextAttempt,
+      }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      showError((err as { error?: string }).error ?? 'Serverfout. Probeer opnieuw.');
+      return;
+    }
+    data = (await res.json()) as GuessApiResponse;
+  } catch {
+    showError('Verbinding mislukt. Controleer je internet en probeer opnieuw.');
+    return;
+  }
+
+  const guess: Guess = {
+    gemeente: data.gemeente,
+    distance: data.distance,
+    bearing: 0,
+    arrow: data.arrow,
+    proximity: data.proximity,
+    isCorrect: data.isCorrect,
+  };
+
   state.guesses.push(guess);
-  state.attempts++;
+  state.attempts = nextAttempt;
+  state.globalSolveCount = data.globalSolveCount;
+  renderGlobalSolveCount(data.globalSolveCount);
+
+  if (data.isCorrect) {
+    lastHistoricalWins = data.gemeenteHistoricalWins;
+  }
+
+  if (data.target) {
+    state.targetName = data.target.name;
+    state.targetProvince = data.target.province;
+  }
+
+  if (data.hints) {
+    state.unlockedHints = mergeHints(state.unlockedHints, data.hints);
+    renderHints();
+  }
 
   $('#empty-state')?.remove();
   addGuessRow(guess);
-  renderAttemptDots();
-  updateAttemptLabel();
 
   const guessInput = $('#guess-input') as HTMLInputElement;
   guessInput.value = '';
   delete guessInput.dataset.selectedId;
-  guessInput.focus();
 
-  if (isCorrect) {
+  renderAttemptDots();
+  updateAttemptLabel();
+  hideAutocomplete();
+  guessInput.blur();
+
+  if (data.isCorrect) {
     state.gameOver = true;
     state.won = true;
     saveTodayGame();
-    void endGame();
+    await endGame();
   } else if (state.attempts >= MAX_ATTEMPTS) {
     state.gameOver = true;
     state.won = false;
     saveTodayGame();
-    void endGame();
+    await endGame();
   } else {
     saveTodayGame();
   }
@@ -452,11 +563,12 @@ function showCompletedBanner() {
   const banner = document.createElement('div');
   banner.id = 'completed-banner';
   banner.className =
-    'mb-4 py-3 px-4 rounded-xl bg-teal-accent/15 border border-teal-accent/30 text-center text-sm';
+    'mb-4 py-3 px-4 rounded-xl bg-orange-accent/15 border border-orange-accent/30 text-center text-sm';
   if (entry?.won) {
-    banner.innerHTML = `✅ Vandaag al gewonnen in <strong>${entry.attempts}</strong> ${entry.attempts === 1 ? 'poging' : 'pogingen'}! Bekijk je <button type="button" id="banner-stats-link" class="underline text-teal-light font-semibold">statistieken</button>.`;
+    banner.innerHTML = `✅ Vandaag al gewonnen in <strong>${entry.attempts}</strong> ${entry.attempts === 1 ? 'poging' : 'pogingen'}! Bekijk je <button type="button" id="banner-stats-link" class="underline text-orange-light font-semibold">statistieken</button>.`;
   } else {
-    banner.innerHTML = `❌ Vandaag al gespeeld. Het antwoord was <strong>${state.target?.name}</strong>. Morgen een nieuwe puzzel!`;
+    const name = state.targetName ?? 'onbekend';
+    banner.innerHTML = `❌ Vandaag al gespeeld. Het antwoord was <strong>${name}</strong>. Morgen een nieuwe puzzel!`;
   }
   const wrapper = document.querySelector('main .max-w-lg')!;
   $('#completed-banner')?.remove();
@@ -466,11 +578,15 @@ function showCompletedBanner() {
 
 function openStatsModal() {
   if (state.stats) renderStatsUI(state.stats);
-  if (state.globalSolveCount != null) {
-    $('#stat-global-solves')!.textContent = state.globalSolveCount.toLocaleString('nl-NL');
+  if (state.globalSolveCount !== null) {
+    const statEl = $('#stat-global-solves');
+    if (statEl) statEl.textContent = state.globalSolveCount.toLocaleString('nl-NL');
   }
-  void refreshGlobalSolveCount();
-  $('#modal-stats')!.classList.remove('hidden');
+  openModal('stats');
+}
+
+function closeModal(name: string) {
+  closeA11yModal(name);
 }
 
 async function shareScore() {
@@ -495,16 +611,23 @@ function bindEvents() {
   guessInput.addEventListener('input', () => {
     delete guessInput.dataset.selectedId;
     hideError();
-    const items = filterWaterschappen(guessInput.value);
+    const items = filterGemeenten(guessInput.value);
     state.highlightedIndex = 0;
     showAutocomplete(items);
   });
 
-  guessInput.addEventListener('focus', () => showAutocomplete(filterWaterschappen(guessInput.value)));
-  guessInput.addEventListener('blur', () => setTimeout(hideAutocomplete, 150));
+  guessInput.addEventListener('focus', () => {
+    if (guessInput.value.trim()) {
+      showAutocomplete(filterGemeenten(guessInput.value));
+    }
+  });
+
+  guessInput.addEventListener('blur', () => {
+    setTimeout(hideAutocomplete, 150);
+  });
 
   guessInput.addEventListener('keydown', (e) => {
-    const items = filterWaterschappen(guessInput.value);
+    const items = filterGemeenten(guessInput.value);
     if (e.key === 'ArrowDown') {
       e.preventDefault();
       state.highlightedIndex = Math.min(state.highlightedIndex + 1, items.length - 1);
@@ -516,75 +639,85 @@ function bindEvents() {
     } else if (e.key === 'Enter') {
       e.preventDefault();
       if (state.highlightedIndex >= 0 && items[state.highlightedIndex]) {
-        selectWaterschap(items[state.highlightedIndex]);
+        selectGemeente(items[state.highlightedIndex]);
       }
-      submitGuess();
+      void submitGuess();
     } else if (e.key === 'Escape') {
       hideAutocomplete();
     }
   });
 
-  $('#btn-guess')!.addEventListener('click', submitGuess);
+  $('#btn-guess')!.addEventListener('click', () => void submitGuess());
   $('#btn-stats')!.addEventListener('click', openStatsModal);
   $('#stats-bar')!.addEventListener('click', openStatsModal);
-  $('#btn-info')!.addEventListener('click', () => $('#modal-info')!.classList.remove('hidden'));
+  $('#btn-info')!.addEventListener('click', () => openModal('info'));
   $('#btn-share')!.addEventListener('click', () => void shareScore());
-  $('#btn-close-result')!.addEventListener('click', () => $('#modal-result')!.classList.add('hidden'));
+  $('#btn-close-result')!.addEventListener('click', () => closeModal('result'));
 
-  document.querySelectorAll('[data-close="stats"]').forEach((el) => {
-    el.addEventListener('click', () => $('#modal-stats')!.classList.add('hidden'));
-  });
-  document.querySelectorAll('[data-close="info"]').forEach((el) => {
-    el.addEventListener('click', () => $('#modal-info')!.classList.add('hidden'));
-  });
-
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      $('#modal-info')!.classList.add('hidden');
-      $('#modal-stats')!.classList.add('hidden');
-      if (!state.gameOver) $('#modal-result')!.classList.add('hidden');
-    }
+  document.querySelectorAll('[data-close]').forEach((el) => {
+    el.addEventListener('click', () => {
+      const target = (el as HTMLElement).dataset.close;
+      if (target) closeModal(target);
+    });
   });
 }
 
-export function initWaterschaple() {
-  const today = new Date();
-  state.dateKey = getDateKey(today);
-  state.puzzleNumber = getPuzzleNumber(today);
+export async function initGemeentedle() {
+  renderGlobalSolveCount(null, 'loading');
+
+  const meta = await fetchDailyMeta();
+  if (!meta) {
+    renderGlobalSolveCount(null, 'error');
+    $('#game-date-label')!.textContent = 'Kon puzzel niet laden';
+    return;
+  }
+
+  state.dateKey = meta.dateKey;
+  state.puzzleNumber = meta.puzzleNumber;
+  state.gemeenten = meta.gemeenten;
+  state.yesterday = meta.yesterday;
+  state.globalSolveCount = meta.globalSolveCount;
   state.stats = loadStats();
   state.resultRecorded = state.stats.completedDates.includes(state.dateKey);
 
-  const expectedTarget = USE_RANDOM_TARGET_FOR_TESTING ? null : getDailyTarget(today);
   const saved = !USE_RANDOM_TARGET_FOR_TESTING && state.stats.todayGame;
   const canRestore =
     !!saved &&
     state.stats.todayGame!.date === state.dateKey &&
-    state.stats.todayGame!.puzzleNumber === state.puzzleNumber &&
-    state.stats.todayGame!.targetId === expectedTarget?.id;
+    state.stats.todayGame!.puzzleNumber === state.puzzleNumber;
 
   if (canRestore && state.stats.todayGame) {
     const tg = state.stats.todayGame;
-    state.target = WATERSCHAPPEN.find((w) => w.id === tg.targetId) ?? null;
     state.guesses = tg.guesses.map(deserializeGuess).filter((g): g is Guess => g !== null);
     state.attempts = tg.attempts;
     state.gameOver = tg.gameOver;
     state.won = tg.won;
+    state.targetName = tg.targetName ?? null;
+    state.targetProvince = tg.targetProvince ?? null;
+    state.unlockedHints = tg.unlockedHints ?? { flagUrl: null, province: null };
   } else {
-    state.target = USE_RANDOM_TARGET_FOR_TESTING
-      ? WATERSCHAPPEN[Math.floor(Math.random() * WATERSCHAPPEN.length)]
-      : expectedTarget;
     state.guesses = [];
     state.attempts = 0;
     state.gameOver = state.resultRecorded;
     state.won = state.resultRecorded
       ? (state.stats.history.find((h) => h.date === state.dateKey)?.won ?? false)
       : false;
+    state.targetName = null;
+    state.targetProvince = null;
+    state.unlockedHints = { flagUrl: null, province: null };
   }
 
-  if (import.meta.env.DEV && state.target) {
-    console.log('[Waterschaple debug] Doel:', state.target.name);
+  if (
+    state.attempts >= HINT_FLAG_AFTER_ATTEMPT &&
+    !state.won &&
+    (!state.unlockedHints.flagUrl ||
+      (state.attempts >= HINT_PROVINCE_AFTER_ATTEMPT && !state.unlockedHints.province))
+  ) {
+    const hints = await fetchUnlockedHints(state.attempts);
+    if (hints) state.unlockedHints = mergeHints(state.unlockedHints, hints);
   }
 
+  const today = new Date();
   const dateStr = today.toLocaleDateString('nl-NL', {
     weekday: 'long',
     day: 'numeric',
@@ -593,13 +726,16 @@ export function initWaterschaple() {
   });
   $('#game-date-label')!.textContent = `Puzzel #${state.puzzleNumber} · ${dateStr}`;
 
-  const yesterday = getYesterdayTarget(today);
-  const yesterdayPuzzle = getPuzzleNumber(getYesterdayDate(today));
-  $('#yesterday-puzzle-number')!.textContent = String(yesterdayPuzzle);
-  $('#yesterday-waterschap-name')!.textContent = yesterday.name;
+  if (meta.yesterday) {
+    $('#yesterday-puzzle-number')!.textContent = String(meta.yesterday.puzzleNumber);
+    $('#yesterday-gemeente-name')!.textContent = meta.yesterday.name;
+    $('#yesterday-gemeente-province')!.textContent = ` (${meta.yesterday.province})`;
+  }
 
+  renderGlobalSolveCount(meta.globalSolveCount);
   renderAttemptDots();
   updateAttemptLabel();
+  renderHints();
   renderStatsUI(state.stats);
 
   const guessInput = $('#guess-input') as HTMLInputElement;
@@ -615,7 +751,7 @@ export function initWaterschaple() {
     const empty = document.createElement('p');
     empty.id = 'empty-state';
     empty.className = 'text-white/30 text-sm text-center py-6';
-    empty.textContent = 'Nog geen pogingen. Kies een waterschap en druk op Raad.';
+    empty.textContent = 'Nog geen pogingen. Kies een gemeente en druk op Raad.';
     guessHistory.appendChild(empty);
   } else {
     state.guesses.forEach((g) => addGuessRow(g, true));
@@ -624,6 +760,5 @@ export function initWaterschaple() {
   if (state.gameOver && state.resultRecorded) showCompletedBanner();
 
   bindEvents();
-  void refreshGlobalSolveCount().then(() => syncGlobalWinIfNeeded());
   startGlobalCountPolling();
 }

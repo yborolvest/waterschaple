@@ -1,4 +1,9 @@
-import type { Waterschap } from './types';
+export interface Waterschap {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+}
 
 /**
  * 20 Nederlandse waterschappen met centrale coördinaten.

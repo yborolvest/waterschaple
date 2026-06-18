@@ -15,7 +15,7 @@
 | **Audience** | Dutch-speaking players |
 | **Agency** | Your Digital Agency (Netherlands) |
 | **Repo** | https://github.com/yborolvest/waterschaple |
-| **Live stack** | Astro 5 + Tailwind CSS 3 + vanilla TypeScript (client) |
+| **Live stack** | Astro 5 (hybrid) + Node adapter + Tailwind + TypeScript |
 
 **NL:** Spelers raden dagelijks welk van de 20 Nederlandse waterschappen het doel is. Na elke gok zien ze afstand (km), richtingspijl en nabijheidsscore.  
 **EN:** Players guess which of 20 Dutch water boards is today's target. Each guess shows distance (km), direction arrow, and proximity score.
@@ -30,7 +30,7 @@
 4. **Win** = exact waterschap match (100% proximity).
 5. **Loss** = 6 wrong guesses.
 6. **Streak** = consecutive *winning* days (Wordle-style); stored in `localStorage`.
-7. **Community counter** = global daily win count via CountAPI (one increment per device per win).
+7. **Community counter** = global daily win count via **eigen Astro API** + Redis/file storage.
 8. **Share** = emoji grid copied to clipboard after game ends.
 
 ---
@@ -44,34 +44,54 @@ src/
 │   ├── config.ts            # Constants, feature flags
 │   ├── game-logic.ts        # Haversine, bearing, daily puzzle picker
 │   ├── stats.ts             # localStorage player stats
-│   ├── global-counter.ts    # CountAPI integration
-│   └── types.ts             # TypeScript interfaces
-├── scripts/game-client.ts   # DOM, events, game loop (browser only)
-├── pages/index.astro        # Main UI markup + script entry
+│   ├── global-counter.ts    # Client → API calls
+│   └── server/
+│       ├── solve-store.ts   # Redis (prod) or .data/solves.json (dev)
+│       └── rate-limit.ts    # IP rate limiting
+├── pages/api/solves/        # GET count, POST increment
+├── scripts/game-client.ts   # DOM, events, game loop
+├── pages/index.astro
 ├── layouts/BaseLayout.astro
 └── styles/global.css        # Tailwind + custom animations
 ```
 
-- **Static site** — no backend; deploy `dist/` to any static host.
-- **Client-only state** — `localStorage` key: `waterschaple_stats_v1`.
-- **No framework on client** — plain TS modules imported from Astro `<script>`.
+- **Hybrid Astro** — static UI + server API routes (`output: 'hybrid'`, `@astrojs/node`).
+- **Community counter** — server-side store; Upstash Redis in production, `.data/solves.json` locally.
+- **Client state** — `localStorage` key: `waterschaple_stats_v1`.
 - **Legacy** — `legacy-index.html` is the original single-file prototype (reference only).
+
+---
+
+## Community solve API
+
+| Endpoint | Method | Purpose |
+|----------|--------|---------|
+| `/api/solves/count?puzzle=&date=` | GET | Huidige win-count ophalen |
+| `/api/solves/increment` | POST | +1 na gewonnen spel (gevalideerd) |
+
+**POST body:** `{ puzzleNumber, dateKey }`  
+**Server checks:** puzzel + datum moeten overeenkomen met vandaag (`Europe/Amsterdam`).  
+**Rate limit:** max 10 increment-requests per IP per uur.  
+**Client dedup:** `globalWinReportedDates` in localStorage (1× per apparaat per dag).
+
+**Storage:**
+- **Dev:** `.data/solves.json` (auto-created, gitignored)
+- **Prod:** [Upstash Redis](https://upstash.com) via `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN`
 
 ---
 
 ## Daily puzzle algorithm
 
 - **Epoch:** `2024-01-01` (`EPOCH_DATE` in `config.ts`)
+- **Timezone:** `Europe/Amsterdam` (`GAME_TIMEZONE`) — global same puzzle for all players
 - **Puzzle number:** days since epoch + 1
 - **Target index:** `dayIndex % 20` into `WATERSCHAPPEN` array
-- **Date key:** local timezone `YYYY-MM-DD`
-
-All players with the same local calendar date see the same puzzle. The algorithm is deterministic — no server needed.
+- **Date key:** `YYYY-MM-DD` in Amsterdam timezone
 
 ```ts
-getDailyTarget(date)   // today's target
-getYesterdayTarget(date) // yesterday's revealed answer
-getPuzzleNumber(date)  // share text / UI label
+getDailyTarget(date)      // today's target
+getYesterdayTarget(date)  // yesterday's revealed answer
+getPuzzleNumber(date)     // share text / UI label
 ```
 
 ---
@@ -84,8 +104,8 @@ getPuzzleNumber(date)  // share text / UI label
 | `MAX_ATTEMPTS` | 6 |
 | `MAX_DISTANCE_KM` | 350 (proximity scale) |
 | `STORAGE_KEY` | `waterschaple_stats_v1` |
-| `GLOBAL_COUNTER_PREFIX` | `yda-waterschaple` |
-| `GLOBAL_COUNTER_API` | `https://countapi.mileshilliard.com/api/v1` |
+| `GAME_TIMEZONE` | `Europe/Amsterdam` |
+| `SOLVE_RATE_LIMIT_PER_HOUR` | 10 (API increment per IP) |
 
 ---
 
@@ -162,8 +182,8 @@ npm run preview
 
 ## Future extension ideas
 
-- Server-side API route (Astro SSR) for community counter instead of client CountAPI
-- GitHub Pages / Vercel deploy config
+- Deploy to Railway/Render/Fly with Node adapter + Upstash
+- GitHub Actions CI
 - i18n (English UI toggle)
 - Map visualization of guesses
 - Official 21st waterschap if dataset is updated
@@ -179,7 +199,7 @@ npm run preview
 | UI copy / layout | `src/pages/index.astro` |
 | Game behaviour / events | `src/scripts/game-client.ts` |
 | Streak & scores | `src/lib/stats.ts` |
-| Global solve count | `src/lib/global-counter.ts` |
+| Global solve count | `src/lib/server/solve-store.ts`, `src/pages/api/solves/` |
 | Feature flags | `src/lib/config.ts` |
 
 ---

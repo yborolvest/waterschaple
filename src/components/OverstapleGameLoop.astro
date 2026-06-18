@@ -1,0 +1,98 @@
+---
+/** Overstaple spelinterface — route raden tussen stations */
+---
+
+<main class="relative z-10 flex-1 px-4 py-6 sm:py-8">
+  <div class="max-w-lg mx-auto">
+    <section
+      class="mb-6 rounded-2xl border border-transfer-accent/25 bg-transfer-accent/10 p-4 sm:p-5"
+      aria-label="Route van vandaag"
+    >
+      <p class="text-xs uppercase tracking-widest text-transfer-light/60 font-semibold mb-3">Reis van vandaag</p>
+      <div class="flex items-center gap-2 sm:gap-3 text-sm sm:text-base">
+        <span id="route-start" class="font-bold text-transfer-light text-center flex-1 leading-snug">…</span>
+        <span class="text-transfer-accent text-xl flex-shrink-0" aria-hidden="true">→</span>
+        <span id="route-end" class="font-bold text-transfer-light text-center flex-1 leading-snug">…</span>
+      </div>
+      <p class="text-white/50 text-xs text-center mt-3">
+        Raad alle <strong id="route-intermediate-count" class="text-transfer-light">—</strong> tussenstations
+      </p>
+      <div
+        id="route-map"
+        class="mt-4 w-full max-w-sm mx-auto min-h-[180px] rounded-xl overflow-hidden bg-royal-950/40"
+        role="img"
+        aria-label="Kaart met start- en eindstation"
+      ></div>
+      <div class="flex flex-wrap justify-center gap-3 text-[10px] sm:text-xs text-white/45 mt-2">
+        <span><span class="inline-block w-2 h-2 rounded-full bg-green-500 align-middle mr-1"></span>Start (A)</span>
+        <span><span class="inline-block w-2 h-2 rounded-full bg-transfer-accent align-middle mr-1"></span>Eind (B)</span>
+        <span><span class="inline-block w-2 h-2 rounded-full bg-green-400 align-middle mr-1"></span>✅</span>
+        <span><span class="inline-block w-2 h-2 rounded-full bg-transfer-light align-middle mr-1"></span>🟩</span>
+        <span><span class="inline-block w-2 h-2 rounded-full bg-orange-400 align-middle mr-1"></span>🟧</span>
+        <span><span class="inline-block w-2 h-2 rounded-full bg-red-400 align-middle mr-1"></span>🟥</span>
+      </div>
+    </section>
+
+    <div class="flex items-center justify-between mb-4">
+      <p class="text-sm text-white/60">
+        Poging <span id="guess-current" class="text-transfer-accent font-semibold">1</span>
+        van <span id="max-guesses" class="font-semibold">—</span>
+        · nog <span id="remaining-count" class="text-transfer-light font-semibold">—</span> stations
+      </p>
+      <div class="flex gap-1 flex-wrap justify-end max-w-[40%]" id="guess-dots" aria-hidden="true"></div>
+    </div>
+
+    <div class="relative mb-6" id="combobox-wrapper">
+      <label for="guess-input" class="sr-only">Kies een treinstation</label>
+      <div class="flex gap-2">
+        <div class="relative flex-1">
+          <input
+            id="guess-input"
+            type="text"
+            autocomplete="off"
+            placeholder="Welk station ligt ertussen?"
+            class="w-full px-4 py-3.5 rounded-xl bg-white text-royal-950 placeholder:text-gray-400 border-2 border-transparent focus:border-transfer-accent focus:outline-none transition-colors text-base shadow-lg"
+            role="combobox"
+            aria-expanded="false"
+            aria-controls="autocomplete-list"
+            aria-autocomplete="list"
+          />
+          <ul
+            id="autocomplete-list"
+            role="listbox"
+            class="autocomplete-list absolute left-0 right-0 top-full mt-1 max-h-52 overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-100 z-50 hidden"
+          ></ul>
+        </div>
+        <button
+          id="btn-guess"
+          type="button"
+          class="px-5 py-3.5 rounded-xl bg-transfer-accent hover:bg-transfer-400 text-royal-950 font-bold transition-all hover:scale-105 active:scale-95 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+        >Raad</button>
+      </div>
+      <p id="input-error" class="text-red-400 text-sm mt-2 hidden" role="alert"></p>
+    </div>
+
+    <section aria-label="Legenda">
+      <div class="flex flex-wrap gap-3 text-xs text-white/50 mb-4">
+        <span>✅ verbonden</span>
+        <span>🟩 op pad</span>
+        <span>🟧 bijna</span>
+        <span>🟥 fout</span>
+      </div>
+    </section>
+
+    <section aria-label="Gissingsgeschiedenis">
+      <h2 class="text-xs uppercase tracking-widest text-white/40 mb-3 font-semibold">Jouw pogingen</h2>
+      <div id="guess-history" class="space-y-2 min-h-[48px]">
+        <p id="empty-state" class="text-white/30 text-sm text-center py-6">
+          Nog geen pogingen. Raad welke stations tussen start en eind liggen.
+        </p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+  import { initOverstaple } from '../scripts/overstaple-client';
+  initOverstaple();
+</script>

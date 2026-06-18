@@ -1,0 +1,18 @@
+---
+/** NL: Light/dark modus schakelaar / EN: Theme toggle button */
+---
+
+<button
+  type="button"
+  data-theme-toggle
+  aria-pressed="true"
+  aria-label="Schakel naar licht thema"
+  class="theme-toggle fixed bottom-4 right-4 z-40 w-10 h-10 rounded-full border backdrop-blur-sm flex items-center justify-center text-lg transition-all hover:scale-105 active:scale-95 shadow-lg"
+>
+  <span data-theme-icon aria-hidden="true">☀️</span>
+</button>
+
+<script>
+  import { initThemeToggle } from '../scripts/theme';
+  initThemeToggle();
+</script>

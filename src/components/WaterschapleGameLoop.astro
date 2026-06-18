@@ -1,0 +1,59 @@
+---
+/** Waterschaple spelinterface — teal accent theme */
+---
+
+<main class="relative z-10 flex-1 px-4 py-6 sm:py-8">
+  <div class="max-w-lg mx-auto">
+    <div class="flex items-center justify-between mb-4">
+      <p class="text-sm text-white/60">
+        Poging <span id="attempt-current" class="text-teal-accent font-semibold">1</span>
+        van <span class="font-semibold">6</span>
+      </p>
+      <div class="flex gap-1.5" id="attempt-dots" aria-hidden="true"></div>
+    </div>
+
+    <div class="relative mb-6" id="combobox-wrapper">
+      <label for="guess-input" class="sr-only">Kies een waterschap</label>
+      <div class="flex gap-2">
+        <div class="relative flex-1">
+          <input
+            id="guess-input"
+            type="text"
+            autocomplete="off"
+            placeholder="Zoek een waterschap…"
+            class="w-full px-4 py-3.5 rounded-xl bg-white text-royal-950 placeholder:text-gray-400 border-2 border-transparent focus:border-teal-accent focus:outline-none transition-colors text-base shadow-lg"
+            role="combobox"
+            aria-expanded="false"
+            aria-controls="autocomplete-list"
+            aria-autocomplete="list"
+          />
+          <ul
+            id="autocomplete-list"
+            role="listbox"
+            class="autocomplete-list absolute left-0 right-0 top-full mt-1 max-h-52 overflow-y-auto bg-white rounded-xl shadow-2xl border border-gray-100 z-50 hidden"
+          ></ul>
+        </div>
+        <button
+          id="btn-guess"
+          type="button"
+          class="px-5 py-3.5 rounded-xl bg-teal-accent hover:bg-teal-400 text-royal-950 font-bold transition-all hover:scale-105 active:scale-95 shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100"
+        >Raad</button>
+      </div>
+      <p id="input-error" class="text-red-400 text-sm mt-2 hidden" role="alert"></p>
+    </div>
+
+    <section aria-label="Gissingsgeschiedenis">
+      <h2 class="text-xs uppercase tracking-widest text-white/40 mb-3 font-semibold">Jouw pogingen</h2>
+      <div id="guess-history" class="space-y-2 min-h-[48px]">
+        <p id="empty-state" class="text-white/30 text-sm text-center py-6">
+          Nog geen pogingen. Kies een waterschap en druk op Raad.
+        </p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<script>
+  import { initWaterschaple } from '../scripts/waterschaple-client';
+  initWaterschaple();
+</script>

@@ -1,5 +1,4 @@
 import { MAX_ATTEMPTS, STORAGE_KEY } from './config';
-import { WATERSCHAPPEN } from '../data/waterschappen';
 import { daysBetween } from './game-logic';
 import type { Guess, PlayerStats, SerializedGuess } from './types';
 
@@ -33,13 +32,15 @@ export function saveStats(stats: PlayerStats): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
   } catch (e) {
-    console.warn('[Waterschaple] Kon stats niet opslaan:', e);
+    console.warn('[Gemeentedle] Kon stats niet opslaan:', e);
   }
 }
 
 export function serializeGuess(guess: Guess): SerializedGuess {
   return {
-    waterschapId: guess.waterschap.id,
+    gemeenteId: guess.gemeente.id,
+    gemeenteName: guess.gemeente.name,
+    province: guess.gemeente.province,
     distance: guess.distance,
     bearing: guess.bearing,
     arrow: guess.arrow,
@@ -49,9 +50,19 @@ export function serializeGuess(guess: Guess): SerializedGuess {
 }
 
 export function deserializeGuess(data: SerializedGuess): Guess | null {
-  const waterschap = WATERSCHAPPEN.find((w) => w.id === data.waterschapId);
-  if (!waterschap) return null;
-  return { waterschap, ...data };
+  if (!data.gemeenteId || !data.gemeenteName) return null;
+  return {
+    gemeente: {
+      id: data.gemeenteId,
+      name: data.gemeenteName,
+      province: data.province,
+    },
+    distance: data.distance,
+    bearing: data.bearing,
+    arrow: data.arrow,
+    proximity: data.proximity,
+    isCorrect: data.isCorrect,
+  };
 }
 
 export function recordGameResult(

@@ -1,12 +1,11 @@
-export interface Waterschap {
+export interface GemeentePublic {
   id: string;
   name: string;
-  lat: number;
-  lng: number;
+  province: string;
 }
 
 export interface Guess {
-  waterschap: Waterschap;
+  gemeente: GemeentePublic;
   distance: number;
   bearing: number;
   arrow: string;
@@ -25,15 +24,24 @@ export interface HistoryEntry {
 export interface TodayGame {
   date: string;
   puzzleNumber: number;
-  targetId: string;
   guesses: SerializedGuess[];
   attempts: number;
   gameOver: boolean;
   won: boolean;
+  targetName?: string;
+  targetProvince?: string;
+  unlockedHints?: UnlockedHints;
+}
+
+export interface UnlockedHints {
+  flagUrl: string | null;
+  province: string | null;
 }
 
 export interface SerializedGuess {
-  waterschapId: string;
+  gemeenteId: string;
+  gemeenteName: string;
+  province: string;
   distance: number;
   bearing: number;
   arrow: string;
@@ -55,8 +63,27 @@ export interface PlayerStats {
   todayGame: TodayGame | null;
 }
 
+export interface DailyMeta {
+  puzzleNumber: number;
+  dateKey: string;
+  yesterday: GemeentePublic & { puzzleNumber: number };
+  gemeenten: GemeentePublic[];
+  globalSolveCount: number;
+}
+
+export interface GuessApiResponse {
+  gemeente: GemeentePublic;
+  distance: number;
+  arrow: string;
+  proximity: number;
+  isCorrect: boolean;
+  globalSolveCount: number;
+  gemeenteHistoricalWins: number | null;
+  target?: GemeentePublic;
+  hints?: UnlockedHints;
+}
+
 export interface GameState {
-  target: Waterschap | null;
   guesses: Guess[];
   attempts: number;
   gameOver: boolean;
@@ -67,4 +94,9 @@ export interface GameState {
   stats: PlayerStats | null;
   resultRecorded: boolean;
   globalSolveCount: number | null;
+  gemeenten: GemeentePublic[];
+  targetName: string | null;
+  targetProvince: string | null;
+  yesterday: (GemeentePublic & { puzzleNumber: number }) | null;
+  unlockedHints: UnlockedHints;
 }
