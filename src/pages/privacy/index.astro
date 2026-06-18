@@ -1,0 +1,67 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout
+  title="Privacy — Rijkdle"
+  description="Privacy- en cookiebeleid van Rijkdle."
+  wave="blend"
+>
+  <main class="relative z-10 flex-1 px-4 py-10 sm:py-14">
+    <div class="max-w-lg mx-auto">
+      <a href="/" class="inline-flex items-center gap-1 text-white/60 hover:text-white/80 text-xs mb-6 transition-colors">
+        <span aria-hidden="true">←</span> Terug naar Rijkdle
+      </a>
+
+      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight mb-2">Privacy &amp; cookies</h1>
+      <p class="text-white/60 text-sm mb-8">Laatst bijgewerkt: juni 2026</p>
+
+      <section class="space-y-4 text-white/80 text-sm leading-relaxed">
+        <div>
+          <h2 class="text-base font-semibold text-white mb-2">Nederlands</h2>
+          <p>
+            Rijkdle wordt aangeboden door Your Digital Agency. We verzamelen zo weinig data mogelijk.
+            Het spel slaat je voortgang lokaal op in je browser (localStorage); die data verlaten je apparaat niet
+            voor onze servers.
+          </p>
+          <p class="mt-3">
+            <strong>Analytics (optioneel):</strong> met jouw toestemming laden we Umami Analytics
+            (<a href="https://umami.is" class="text-white underline" rel="noopener noreferrer" target="_blank">umami.is</a>),
+            een privacyvriendelijke oplossing zonder advertentiecookies. Umami registreert geaggregeerde
+            bezoekstatistieken (bijv. paginaweergaven). Je keuze slaan we op in localStorage onder
+            <code class="text-white/90">rijkdle-cookie-consent</code>.
+          </p>
+          <p class="mt-3">
+            Je kunt je toestemming altijd wijzigen via de knop <strong>Cookies</strong> linksonder op de site.
+            Weigeren betekent dat er geen analytics-script wordt geladen.
+          </p>
+          <p class="mt-3">
+            Vragen? Neem contact op via
+            <a href="https://yourdigitalagency.nl" class="text-white underline" rel="noopener noreferrer" target="_blank">Your Digital Agency</a>.
+          </p>
+        </div>
+
+        <div class="pt-4 border-t border-white/10">
+          <h2 class="text-base font-semibold text-white mb-2">English</h2>
+          <p>
+            Rijkdle is operated by Your Digital Agency. We collect as little data as possible.
+            Game progress is stored locally in your browser (localStorage) and is not sent to our servers.
+          </p>
+          <p class="mt-3">
+            <strong>Analytics (optional):</strong> with your consent we load Umami Analytics, a privacy-friendly
+            tool without advertising cookies. Umami records aggregated visit statistics. Your choice is stored in
+            localStorage as <code class="text-white/90">rijkdle-cookie-consent</code>.
+          </p>
+          <p class="mt-3">
+            You can change your choice anytime using the <strong>Cookies</strong> button at the bottom left.
+            Rejecting means no analytics script is loaded.
+          </p>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="relative z-10 px-4 py-4 border-t border-white/10 text-center text-white/60 text-xs">
+    <p>Rijkdle &mdash; Your Digital Agency</p>
+  </footer>
+</BaseLayout>

@@ -1,6 +1,7 @@
 ---
 import '../styles/global.css';
 import ThemeToggle from '../components/ThemeToggle.astro';
+import CookieBanner from '../components/CookieBanner.astro';
 import { BRAND_ASSETS } from '../lib/brand';
 
 interface Props {
@@ -82,5 +83,6 @@ const waveClass =
   <body class:list={['min-h-screen font-display flex flex-col app-body', waveClass]}>
     <ThemeToggle />
     <slot />
+    <CookieBanner />
   </body>
 </html>
