@@ -1,0 +1,98 @@
+---
+import logoSvg from '../../logos/SVG/logo.svg?raw';
+import logoWhiteSvg from '../../logos/SVG/logo-white.svg?raw';
+import faviconSvg from '../../logos/SVG/favicon.svg?raw';
+import faviconWhiteSvg from '../../logos/SVG/favicon-white.svg?raw';
+import { BRAND_ASSETS } from '../lib/brand';
+
+interface Props {
+  class?: string;
+  height?: number;
+  variant?: 'full' | 'mark';
+}
+
+const { class: className = '', height = 96, variant = 'full' } = Astro.props;
+const lightAssets = variant === 'mark' ? BRAND_ASSETS.mark.light : BRAND_ASSETS.logo.light;
+const darkAssets = variant === 'mark' ? BRAND_ASSETS.mark.dark : BRAND_ASSETS.logo.dark;
+const lightSvg = variant === 'mark' ? faviconSvg : logoSvg;
+const darkSvg = variant === 'mark' ? faviconWhiteSvg : logoWhiteSvg;
+const width = Math.round(height * (lightAssets.width / lightAssets.height));
+---
+
+{variant === 'full' ? (
+  <span
+    class:list={['site-logo site-logo--full', className]}
+    style={`--logo-height: ${height}px`}
+  >
+    <span class="site-logo__theme site-logo__theme--light" set:html={lightSvg} aria-hidden="true" />
+    <span class="site-logo__theme site-logo__theme--dark" set:html={darkSvg} aria-hidden="true" />
+  </span>
+) : (
+  <span class:list={['site-logo site-logo--mark', className]} style={`--logo-height: ${height}px`}>
+    <picture class="site-logo__theme site-logo__theme--light">
+      <source srcset={lightAssets.svg} type="image/svg+xml" />
+      <img
+        src={lightAssets.png}
+        srcset={`${lightAssets.png} 1x, ${lightAssets.png2x} 2x`}
+        alt="Rijkdle"
+        width={height}
+        height={height}
+        decoding="async"
+        loading="eager"
+      />
+    </picture>
+    <picture class="site-logo__theme site-logo__theme--dark">
+      <source srcset={darkAssets.svg} type="image/svg+xml" />
+      <img
+        src={darkAssets.png}
+        srcset={`${darkAssets.png} 1x, ${darkAssets.png2x} 2x`}
+        alt="Rijkdle"
+        width={height}
+        height={height}
+        decoding="async"
+        loading="eager"
+      />
+    </picture>
+  </span>
+)}
+
+<style>
+  .site-logo {
+    display: inline-flex;
+    line-height: 0;
+  }
+
+  .site-logo__theme--dark {
+    display: none;
+  }
+
+  :global([data-theme='dark']) .site-logo__theme--light {
+    display: none;
+  }
+
+  :global([data-theme='dark']) .site-logo__theme--dark {
+    display: inline-flex;
+  }
+
+  .site-logo--full .site-logo__theme :global(svg) {
+    display: block;
+    height: var(--logo-height, 96px);
+    width: auto;
+    max-width: 100%;
+  }
+
+  .site-logo--full .site-logo__theme--light :global(.cls-1) {
+    fill: #007bc7;
+  }
+
+  .site-logo--full .site-logo__theme--light :global(path:not(.cls-1)) {
+    fill: #0f172a;
+  }
+
+  .site-logo--mark img {
+    display: block;
+    height: var(--logo-height, 96px);
+    width: auto;
+    max-width: 100%;
+  }
+</style>

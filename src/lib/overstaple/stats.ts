@@ -61,14 +61,12 @@ export function recordOverstapleResult(
     puzzleNumber,
     dateKey,
     grid,
-    maxGuesses,
   }: {
     won: boolean;
     guesses: number;
     puzzleNumber: number;
     dateKey: string;
     grid: string;
-    maxGuesses: number;
   },
 ): boolean {
   if (stats.completedDates.includes(dateKey)) return false;
@@ -79,7 +77,7 @@ export function recordOverstapleResult(
 
   if (won) {
     stats.gamesWon++;
-    const bucket = Math.min(guesses, maxGuesses) - 1;
+    const bucket = guesses - 1;
     while (stats.guessDistribution.length <= bucket) stats.guessDistribution.push(0);
     stats.guessDistribution[bucket]++;
     if (stats.lastWinDate && daysBetween(stats.lastWinDate, dateKey) === 1) {

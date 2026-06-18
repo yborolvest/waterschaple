@@ -145,15 +145,17 @@ import OverstapleGameLoop from '../../components/OverstapleGameLoop.astro';
         </div>
         <ul class="space-y-3 text-sm text-gray-700 leading-relaxed">
           <li>🚉 Elke dag krijg je een <strong>start- en eindstation</strong> — voor iedereen hetzelfde.</li>
-          <li>🔄 Bij meerdere routes geldt de route met de <strong>minste tussenstops</strong> (alle treintypes, incl. Sprinter).</li>
-          <li>🚄 <strong>Sprinters</strong> tellen gewoon mee — de meest efficiënte route wint.</li>
+          <li>🔄 Het antwoord is de <strong>optimale route</strong> volgens de dienstregeling (09:00 vertrek).</li>
+          <li>📊 Prioriteit: <strong>1)</strong> kortste reistijd · <strong>2)</strong> minste overstappen · <strong>3)</strong> minste haltes.</li>
+          <li>🚧 Actuele <strong>storingen en werkzaamheden</strong> tellen niet mee.</li>
+          <li>🚄 <strong>Sprinters</strong> tellen gewoon mee — alle haltes op de route gelden.</li>
           <li>📝 Raad stations in <strong>willekeurige volgorde</strong> — je hoeft niet van begin naar eind te werken.</li>
           <li>✅ <strong>✅</strong> = op het pad én verbonden met het startstation via je eerdere goede gokken.</li>
           <li>🟩 <strong>🟩</strong> = op het kortste pad, maar nog niet verbonden met start.</li>
           <li>🟧 <strong>🟧</strong> = niet optimaal, maar slechts één overstap langer.</li>
           <li>🟥 <strong>🟥</strong> = helpt niet op weg naar de oplossing.</li>
           <li>🗺️ De <strong>kaart</strong> toont start (A) en eind (B); gevonden stations en spoorlijnen verschijnen naarmate je raadt.</li>
-          <li>🏆 Je wint als je <strong>alle tussenstations</strong> hebt gevonden vóór je pogingen op zijn.</li>
+          <li>🏆 Je wint als je <strong>alle tussenstations</strong> hebt gevonden — onbeperkt pogingen.</li>
           <li>📤 Deel je score via de deelknop na afloop.</li>
         </ul>
         <button data-close="info" class="mt-6 w-full py-3 rounded-xl bg-royal-800 text-white font-semibold hover:bg-royal-700 transition-colors">Begrepen!</button>

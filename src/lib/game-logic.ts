@@ -100,7 +100,12 @@ export function getPuzzleNumberFromKey(dateKey: string): number {
 }
 
 export function getYesterdayDateKey(date = new Date()): string {
-  const dayIndex = getDayIndex(date) - 1;
+  return getDateKeyAfterDays(date, -1);
+}
+
+/** NL: Datum-sleutel N dagen na/voor referentiedatum / EN: Date key offset by N days */
+export function getDateKeyAfterDays(date: Date, days: number): string {
+  const dayIndex = getDayIndex(date) + days;
   const utc = EPOCH_UTC + dayIndex * MS_PER_DAY;
   const d = new Date(utc);
   const y = d.getUTCFullYear();

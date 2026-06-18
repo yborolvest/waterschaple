@@ -1,5 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+import SiteLogo from '../components/SiteLogo.astro';
 import { DAILY_GAMES } from '../data/games';
 import { getPuzzleNumber } from '../lib/game-logic';
 
@@ -14,20 +15,20 @@ const dateStr = today.toLocaleDateString('nl-NL', {
 ---
 
 <BaseLayout
-  title="Staatsdle 🇳🇱"
-  description="Speel Waterschaple, Gemeentedle en meer — dagelijkse Nederlandse guessing games voor iedereen hetzelfde (NL-tijd)."
+  title="Rijkdle"
+  description="Speel Gemeentedle, Waterschaple, Snelwegdle en meer op Rijkdle — dagelijkse Nederlandse geo-raadspellen voor iedereen hetzelfde (NL-tijd)."
   wave="blend"  
 >
-  <header class="hub-header relative z-10 px-4 py-6 sm:py-8 backdrop-blur-sm">
+  <header class="hub-header relative z-10 px-4 pb-6 sm:pb-8 backdrop-blur-sm">
     <div class="max-w-lg mx-auto text-center">
-      <h1 class="text-2xl sm:text-3xl font-bold tracking-tight">
-        Staatsdle <span class="inline-block animate-hub-float" aria-hidden="true">🇳🇱</span>
-      </h1>
+      <a href="/" class="inline-block hub-logo-link" aria-label="Rijkdle">
+        <SiteLogo height={128} class="mx-auto drop-shadow-sm"  />
+      </a>
       <p class="text-white/60 text-sm mt-2">
         Puzzel #{puzzleNumber} · {dateStr}
       </p>
       <p class="text-white/60 text-xs mt-1">
-        Elke dag een nieuw doel — voor iedereen wereldwijd hetzelfde (NL-tijd)
+       Makkelijker kunnen we het niet maken, wel leuker.
       </p>
     </div>
   </header>
@@ -126,7 +127,7 @@ const dateStr = today.toLocaleDateString('nl-NL', {
   </main>
 
   <footer class="relative z-10 px-4 py-4 border-t border-white/10 text-center text-white/60 text-xs">
-    <p>Dagelijkse Geo-spellen &mdash; Your Digital Agency</p>
+    <p>Rijkdle &mdash; Your Digital Agency</p>
   </footer>
 
   <script>

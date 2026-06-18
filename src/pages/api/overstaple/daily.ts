@@ -11,13 +11,18 @@ import {
   buildOverstapleMapData,
   countRemaining,
   evaluateOverstapleGuess,
-  getOverstapleDailyPuzzle,
-  getOverstapleDailyPuzzleFromKey,
   getOverstapleSolveCounterKey,
-  getYesterdayOverstaplePuzzle,
+  getYesterdayOverstaplePuzzlePair,
   isOverstapleWin,
+  type DailyPuzzle,
   type MapGuessInput,
 } from '../../../lib/overstaple/logic';
+import {
+  resolveOverstapleDailyPuzzle,
+  resolveOverstapleDailyPuzzleFromKey,
+  prefetchOverstapleRoutes,
+} from '../../../lib/overstaple/resolve-daily';
+import { ROUTE_PREFETCH_DAYS } from '../../../lib/overstaple/config';
 import type { GuessQuality } from '../../../lib/overstaple/types';
 import { USE_RANDOM_TARGET_FOR_TESTING } from '../../../lib/overstaple/config';
 import { getSolveCount, getStorageBackend, incrementSolveCount } from '../../../lib/server/solve-store';
@@ -61,12 +66,11 @@ function parseGuessesBody(raw: unknown): MapGuessInput[] {
     .map((g) => ({ id: g.id, quality: g.quality }));
 }
 
-function puzzleToRoute(puzzle: NonNullable<ReturnType<typeof getOverstapleDailyPuzzle>>) {
+function puzzleToRoute(puzzle: DailyPuzzle) {
   return {
     start: toPublicStation(puzzle.start),
     end: toPublicStation(puzzle.end),
     intermediateCount: puzzle.intermediate.length,
-    maxGuesses: puzzle.maxGuesses,
   };
 }
 
@@ -75,13 +79,17 @@ export const GET: APIRoute = async ({ url }) => {
   const today = new Date();
   const dateKey = getDateKey(today);
   const puzzleNumber = getPuzzleNumber(today);
-  const puzzle = getOverstapleDailyPuzzle(today);
-  const yesterdayPuzzle = getYesterdayOverstaplePuzzle(today);
+  const puzzle = await resolveOverstapleDailyPuzzle(today);
+  const yesterdayPair = getYesterdayOverstaplePuzzlePair(today);
   const yesterdayKey = getYesterdayDateKey(today);
 
   if (!puzzle) {
     return json({ error: 'Geen puzzel beschikbaar' }, 500);
   }
+
+  void prefetchOverstapleRoutes(today, ROUTE_PREFETCH_DAYS).catch((err) => {
+    console.warn('[Overstaple] Route prefetch mislukt:', err);
+  });
 
   const correctIdsParam = url.searchParams.get('correctIds');
   const restoredCorrectIds = correctIdsParam
@@ -102,10 +110,10 @@ export const GET: APIRoute = async ({ url }) => {
     globalSolveCount,
     backend: getStorageBackend(),
     testMode: USE_RANDOM_TARGET_FOR_TESTING,
-    yesterday: yesterdayPuzzle
+    yesterday: yesterdayPair
       ? {
-          start: toPublicStation(yesterdayPuzzle.start),
-          end: toPublicStation(yesterdayPuzzle.end),
+          start: toPublicStation(yesterdayPair.start),
+          end: toPublicStation(yesterdayPair.end),
           puzzleNumber: getPuzzleNumberFromKey(yesterdayKey),
         }
       : null,
@@ -154,8 +162,8 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   }
 
   const puzzle = USE_RANDOM_TARGET_FOR_TESTING
-    ? getOverstapleDailyPuzzleFromKey(dateKey)
-    : getOverstapleDailyPuzzle();
+    ? await resolveOverstapleDailyPuzzleFromKey(dateKey)
+    : await resolveOverstapleDailyPuzzle();
 
   if (!puzzle) {
     return json({ error: 'Geen puzzel beschikbaar' }, 500);
@@ -181,8 +189,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   }
 
   const won = isOverstapleWin(newCorrect, puzzle);
-  const attempts = typeof guessCount === 'number' ? guessCount : safeGuessed.length + 1;
-  const gameOver = won || attempts >= puzzle.maxGuesses;
+  const gameOver = won;
 
   const counterKey = getOverstapleSolveCounterKey(puzzleNumber, dateKey);
   let globalSolveCount = await getSolveCount(counterKey);

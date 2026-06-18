@@ -53,3 +53,11 @@ export function findShortestPathIds(startId: string, endId: string): string[] | 
 export function pathToIntermediate(path: string[]): string[] {
   return path.length > 2 ? path.slice(1, -1) : [];
 }
+
+export function pathToDailyPuzzleFields(path: string[]) {
+  return {
+    path,
+    intermediate: pathToIntermediate(path),
+    hops: path.length - 1,
+  };
+}

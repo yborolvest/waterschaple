@@ -207,11 +207,7 @@ function updateAttemptLabel() {
 function filterStations(query: string): StationPublic[] {
   const q = query.trim().toLowerCase();
   if (!q) return state.stations;
-  return state.stations.filter(
-    (g) =>
-      g.name.toLowerCase().includes(q) ||
-      g.province.toLowerCase().includes(q),
-  );
+  return state.stations.filter((g) => g.name.toLowerCase().includes(q));
 }
 
 function showAutocomplete(items: StationPublic[]) {

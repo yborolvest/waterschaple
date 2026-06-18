@@ -10,7 +10,6 @@ export interface OverstapleRoute {
   end: StationPublic;
   /** Aantal tussenstations op kortste pad */
   intermediateCount: number;
-  maxGuesses: number;
 }
 
 export interface OverstapleGuess {

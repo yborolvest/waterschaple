@@ -1,7 +1,7 @@
 /**
  * Genereert stationverbindingen + dagelijkse Overstaple-puzzels uit dienstregeling.
- * NL: Volledige treingraaf — Sprinters tellen mee; kortste pad = minste tussenstops.
- * EN: Full train graph; shortest path = fewest intermediate stops.
+ * NL: Start/eind per dag; route wordt server-side opgehaald (1× NS API/dag).
+ * EN: Start/end pairs only; route resolved at runtime via cached NS API call.
  *
  * Bron: https://blobs.duckdb.org/nl-railway/services-2025-03.csv.gz
  */
@@ -11,7 +11,7 @@ import zlib from 'node:zlib';
 
 const SERVICES_URL = 'https://blobs.duckdb.org/nl-railway/services-2025-03.csv.gz';
 const MIN_HOPS = 4;
-const MAX_HOPS = 9;
+const MAX_HOPS = 15;
 const PUZZLE_YEARS = 12;
 
 /** NL: Lange-afstand + internationaal / EN: Long-distance and international services */
@@ -213,13 +213,7 @@ function buildPuzzles(graph, stations) {
 
     candidates.sort((a, b) => a.hops - b.hops || a.end.localeCompare(b.end));
     const pick = candidates[hash32(day + 7919) % candidates.length];
-    puzzles.push({
-      start,
-      end: pick.end,
-      intermediate: pick.intermediate,
-      path: pick.path,
-      hops: pick.hops,
-    });
+    puzzles.push({ start, end: pick.end });
   }
 
   const valid = puzzles.filter(Boolean);
@@ -241,13 +235,13 @@ const puzzles = buildPuzzles(fullGraph, stations);
 
 const file = `/**
  * Stationverbindingen en Overstaple-puzzels
- * NL: Volledige treingraaf voor kortste pad; express/sprinter apart voor referentie.
- * EN: Full train graph for puzzles; express/local graphs stored separately.
+ * NL: Start/eind per dag; optimale route via NS API op de server (1 call/dag, cache).
+ * EN: Daily start/end pairs; optimal route fetched server-side once per day.
  * @generated scripts/generate-station-connections.mjs
  */
 
 /**
- * NL: Buren via alle treintypes (IC, Sprinter, internationaal) — kortste pad = minste tussenstops.
+ * NL: Buren via alle treintypes — scoring gebruikt het opgeslagen NS/graaf-pad.
  * EN: Neighbors via all scheduled train services.
  */
 export const STATION_NEIGHBORS: Record<string, string[]> = ${JSON.stringify(fullGraph, null, 2)};
@@ -261,11 +255,6 @@ export const STATION_NEIGHBORS_LOCAL: Record<string, string[]> = ${JSON.stringif
 export interface OverstaplePuzzleDef {
   start: string;
   end: string;
-  /** Tussenstations op het kortste pad (excl. start/eind) */
-  intermediate: string[];
-  /** Geordend kortste pad incl. start/eind */
-  path: string[];
-  hops: number;
 }
 
 /** NL: Puzzel per dag-index (epoch) / EN: Puzzle per day index */

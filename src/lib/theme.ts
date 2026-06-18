@@ -1,6 +1,8 @@
 /** NL: Light/dark thema / EN: Theme preference */
 
-export const THEME_STORAGE_KEY = 'geo-spellen-theme';
+import { applyBrandAssets } from './brand-theme';
+
+export const THEME_STORAGE_KEY = 'rijkdle-theme';
 export type Theme = 'light' | 'dark';
 
 export function getStoredTheme(): Theme | null {
@@ -21,6 +23,7 @@ export function resolveTheme(): Theme {
 export function applyTheme(theme: Theme): void {
   document.documentElement.setAttribute('data-theme', theme);
   document.documentElement.style.colorScheme = theme;
+  applyBrandAssets(theme);
 }
 
 export function setTheme(theme: Theme): void {

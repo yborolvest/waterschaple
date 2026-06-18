@@ -17,6 +17,15 @@
       <p class="text-white/50 text-xs text-center mt-3">
         Raad alle <strong id="route-intermediate-count" class="text-transfer-light">—</strong> tussenstations
       </p>
+      <div class="mt-4 mb-3 rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 text-xs text-white/60 leading-relaxed" aria-label="Routeprioriteiten">
+        <p class="text-[10px] uppercase tracking-widest text-transfer-light/50 font-semibold mb-1.5">Optimale route</p>
+        <ol class="list-decimal list-inside space-y-0.5">
+          <li>Zo min mogelijk <strong class="text-transfer-light/90">totale reistijd</strong></li>
+          <li>Zo min mogelijk <strong class="text-transfer-light/90">overstappen</strong></li>
+          <li>Zo min mogelijk <strong class="text-transfer-light/90">haltes</strong></li>
+        </ol>
+        <p class="text-[10px] text-white/40 mt-1.5">Op basis van de dienstregeling — geen actuele storingen of werkzaamheden.</p>
+      </div>
       <div
         id="route-map"
         class="mt-4 w-full max-w-sm mx-auto min-h-[180px] rounded-xl overflow-hidden bg-royal-950/40"
@@ -33,13 +42,11 @@
       </div>
     </section>
 
-    <div class="flex items-center justify-between mb-4">
+    <div class="mb-4">
       <p class="text-sm text-white/60">
         Poging <span id="guess-current" class="text-transfer-accent font-semibold">1</span>
-        van <span id="max-guesses" class="font-semibold">—</span>
         · nog <span id="remaining-count" class="text-transfer-light font-semibold">—</span> stations
       </p>
-      <div class="flex gap-1 flex-wrap justify-end max-w-[40%]" id="guess-dots" aria-hidden="true"></div>
     </div>
 
     <div class="relative mb-6" id="combobox-wrapper">

@@ -1,57 +1,86 @@
----
-import '../styles/global.css';
-import ThemeToggle from '../components/ThemeToggle.astro';
-
-interface Props {
-  title?: string;
-  description?: string;
-  wave?: 'orange' | 'teal' | 'highway' | 'rail' | 'transfer' | 'blend';
-}
-
-const {
-  title = 'Gemeentedle 🏛️',
-  description = 'Raad de gemeente van vandaag — het dagelijkse Nederlandse geo-raadspel.',
-  wave = 'orange',
-} = Astro.props;
-
-const waveClass =
-  wave === 'teal'
-    ? 'wave-bg wave-bg-teal'
-    : wave === 'highway'
-      ? 'wave-bg wave-bg-highway'
-      : wave === 'rail'
-        ? 'wave-bg wave-bg-rail'
-        : wave === 'transfer'
-          ? 'wave-bg wave-bg-transfer'
-          : wave === 'blend'
-            ? 'wave-bg wave-bg-blend'
-            : 'wave-bg';
----
-
-<!doctype html>
-<html lang="nl" data-theme="dark">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content={description} />
-    <title>{title}</title>
-    <script is:inline>
-      (function () {
-        var KEY = 'geo-spellen-theme';
-        var stored = localStorage.getItem(KEY);
-        var theme =
-          stored === 'light' || stored === 'dark'
-            ? stored
-            : window.matchMedia('(prefers-color-scheme: light)').matches
-              ? 'light'
-              : 'dark';
-        document.documentElement.setAttribute('data-theme', theme);
-        document.documentElement.style.colorScheme = theme;
-      })();
-    </script>
-  </head>
-  <body class:list={['min-h-screen font-display flex flex-col app-body', waveClass]}>
-    <ThemeToggle />
-    <slot />
-  </body>
-</html>
+---
+import '../styles/global.css';
+import ThemeToggle from '../components/ThemeToggle.astro';
+import { BRAND_ASSETS } from '../lib/brand';
+
+interface Props {
+  title?: string;
+  description?: string;
+  wave?: 'orange' | 'teal' | 'highway' | 'rail' | 'transfer' | 'blend';
+}
+
+const {
+  title = 'Gemeentedle 🏛️',
+  description = 'Raad de gemeente van vandaag — het dagelijkse Nederlandse geo-raadspel.',
+  wave = 'orange',
+} = Astro.props;
+
+const waveClass =
+  wave === 'teal'
+    ? 'wave-bg wave-bg-teal'
+    : wave === 'highway'
+      ? 'wave-bg wave-bg-highway'
+      : wave === 'rail'
+        ? 'wave-bg wave-bg-rail'
+        : wave === 'transfer'
+          ? 'wave-bg wave-bg-transfer'
+          : wave === 'blend'
+            ? 'wave-bg wave-bg-blend'
+            : 'wave-bg';
+---
+
+<!doctype html>
+<html lang="nl" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <link rel="icon" id="brand-favicon-svg" data-brand-icon="svg" href={BRAND_ASSETS.mark.dark.svg} type="image/svg+xml" />
+    <link rel="icon" id="brand-favicon-png" data-brand-icon="png" href={BRAND_ASSETS.mark.dark.png} type="image/png" sizes="256x256" />
+    <link rel="apple-touch-icon" id="brand-favicon-apple" data-brand-icon="apple" href={BRAND_ASSETS.mark.dark.png2x} />
+    <meta name="theme-color" content="#154273" />
+    <title>{title}</title>
+    <script is:inline>
+      (function () {
+        var KEY = 'rijkdle-theme';
+        var stored = localStorage.getItem(KEY);
+        var theme =
+          stored === 'light' || stored === 'dark'
+            ? stored
+            : window.matchMedia('(prefers-color-scheme: light)').matches
+              ? 'light'
+              : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.style.colorScheme = theme;
+
+        var marks = {
+          light: {
+            svg: '/favicon.svg',
+            png: '/favicon.png',
+            png2x: '/favicon@2x.png',
+            themeColor: '#eef2f7',
+          },
+          dark: {
+            svg: '/favicon-white.svg',
+            png: '/favicon-white.png',
+            png2x: '/favicon-white@2x.png',
+            themeColor: '#154273',
+          },
+        };
+        var brand = marks[theme];
+        var svg = document.querySelector('[data-brand-icon="svg"]');
+        var png = document.querySelector('[data-brand-icon="png"]');
+        var apple = document.querySelector('[data-brand-icon="apple"]');
+        var themeMeta = document.querySelector('meta[name="theme-color"]');
+        if (svg) svg.setAttribute('href', brand.svg);
+        if (png) png.setAttribute('href', brand.png);
+        if (apple) apple.setAttribute('href', brand.png2x);
+        if (themeMeta) themeMeta.setAttribute('content', brand.themeColor);
+      })();
+    </script>
+  </head>
+  <body class:list={['min-h-screen font-display flex flex-col app-body', waveClass]}>
+    <ThemeToggle />
+    <slot />
+  </body>
+</html>

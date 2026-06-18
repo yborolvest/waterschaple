@@ -113,14 +113,15 @@ function renderStatsUI(stats: OverstaplePlayerStats) {
     return;
   }
 
-  const maxG = state.route?.maxGuesses ?? 12;
   historyEl.innerHTML = stats.history
     .map((entry) => {
       const dateLabel = new Date(`${entry.date}T12:00:00`).toLocaleDateString('nl-NL', {
         day: 'numeric',
         month: 'short',
       });
-      const scoreLabel = entry.won ? `${entry.guesses}/${maxG}` : `X/${maxG}`;
+      const scoreLabel = entry.won
+        ? `${entry.guesses} pogingen`
+        : '—';
       return `
         <div class="flex items-center justify-between gap-2 py-2 px-3 rounded-lg bg-gray-50 text-sm">
           <div class="min-w-0">
@@ -166,7 +167,6 @@ function renderRoute() {
   $('#route-start')!.textContent = state.route.start.name;
   $('#route-end')!.textContent = state.route.end.name;
   $('#route-intermediate-count')!.textContent = String(state.route.intermediateCount);
-  $('#max-guesses')!.textContent = String(state.route.maxGuesses);
 }
 
 function renderMap(map: OverstapleMapData | null) {
@@ -183,18 +183,6 @@ function renderProgress() {
   $('#guess-current')!.textContent = String(
     state.gameOver ? state.guessCount : state.guessCount + 1,
   );
-
-  const dots = $('#guess-dots')!;
-  dots.innerHTML = '';
-  for (let i = 0; i < state.route.maxGuesses; i++) {
-    const dot = document.createElement('div');
-    const used = i < state.guessCount;
-    const current = i === state.guessCount && !state.gameOver;
-    dot.className = `w-2.5 h-2.5 rounded-full transition-all ${
-      used ? 'bg-transfer-accent' : current ? 'bg-white/40 ring-2 ring-transfer-accent' : 'bg-white/15'
-    }`;
-    dots.appendChild(dot);
-  }
 }
 
 function qualityLabel(quality: OverstapleGuess['quality']): string {
@@ -235,10 +223,9 @@ function addGuessRow(guess: OverstapleGuess, skipAnimation = false) {
 
 function buildShareText(): string {
   const tiles = state.guesses.map((g) => qualityToEmoji(g.quality)).join('');
-  const maxG = state.route?.maxGuesses ?? state.guessCount;
   const route =
     state.route ? `${state.route.start.name} → ${state.route.end.name}` : '';
-  return `Overstaple #${state.puzzleNumber} ${state.won ? state.guessCount : 'X'}/${maxG} 🔄\n${route}\n${tiles}`;
+  return `Overstaple #${state.puzzleNumber} ${state.guessCount} 🔄\n${route}\n${tiles}`;
 }
 
 function saveTodayGame() {
@@ -269,7 +256,7 @@ function filterStations(query: string): StationPublic[] {
   return state.stations.filter((s) => {
     if (blocked.has(s.id)) return false;
     if (!q) return true;
-    return s.name.toLowerCase().includes(q) || s.province.toLowerCase().includes(q);
+    return s.name.toLowerCase().includes(q);
   });
 }
 
@@ -419,7 +406,7 @@ async function submitGuess() {
   }
 }
 
-async function endGame(lastResponse?: OverstapleGuessApiResponse) {
+async function endGame(_lastResponse?: OverstapleGuessApiResponse) {
   const input = $('#guess-input') as HTMLInputElement;
   const btn = $('#btn-guess') as HTMLButtonElement;
   input.disabled = true;
@@ -427,60 +414,34 @@ async function endGame(lastResponse?: OverstapleGuessApiResponse) {
 
   const shareText = buildShareText();
   const grid = state.guesses.map((g) => qualityToEmoji(g.quality)).join('');
-  const maxG = state.route?.maxGuesses ?? state.guessCount;
 
-  if (!state.resultRecorded && state.stats && state.dateKey) {
+  if (!state.resultRecorded && state.stats && state.dateKey && state.won) {
     const prevStreak = state.stats.currentStreak;
     recordOverstapleResult(state.stats, {
-      won: state.won,
+      won: true,
       guesses: state.guessCount,
       puzzleNumber: state.puzzleNumber,
       dateKey: state.dateKey,
       grid,
-      maxGuesses: maxG,
     });
     state.resultRecorded = true;
     renderStatsUI(state.stats);
 
     const streakEl = $('#result-streak')!;
-    if (state.won) {
-      streakEl.classList.remove('hidden');
-      const ns = state.stats.currentStreak;
-      streakEl.textContent =
-        ns === 1 && prevStreak === 0
-          ? '🔥 Reeks gestart! 1 dag op rij.'
-          : `🔥 Reeks: ${ns} ${ns === 1 ? 'dag' : 'dagen'} op rij!`;
-    } else {
-      streakEl.classList.remove('hidden');
-      streakEl.textContent =
-        prevStreak > 0
-          ? `💔 Reeks verbroken (was ${prevStreak} ${prevStreak === 1 ? 'dag' : 'dagen'})`
-          : 'Morgen een nieuwe route!';
-    }
+    streakEl.classList.remove('hidden');
+    const ns = state.stats.currentStreak;
+    streakEl.textContent =
+      ns === 1 && prevStreak === 0
+        ? '🔥 Reeks gestart! 1 dag op rij.'
+        : `🔥 Reeks: ${ns} ${ns === 1 ? 'dag' : 'dagen'} op rij!`;
   }
 
   $('#share-preview')!.textContent = shareText;
 
-  const solution = lastResponse?.solution;
-  if (state.won) {
-    $('#result-emoji')!.textContent = '🏆';
-    $('#result-title')!.textContent = 'Goede reis!';
-    $('#result-message')!.textContent = `Je hebt alle ${state.route?.intermediateCount} tussenstations gevonden in ${state.guessCount} pogingen!`;
-    $('#result-route')!.classList.add('hidden');
-  } else {
-    $('#result-emoji')!.textContent = '🔄';
-    $('#result-title')!.textContent = 'Volgende keer beter!';
-    $('#result-message')!.textContent = 'Je pogingen zijn op. De route was:';
-    $('#result-route')!.classList.remove('hidden');
-    if (solution) {
-      const names = [
-        solution.start.name,
-        ...solution.intermediate.map((s) => s.name),
-        solution.end.name,
-      ];
-      $('#result-route-path')!.textContent = names.join(' → ');
-    }
-  }
+  $('#result-emoji')!.textContent = '🏆';
+  $('#result-title')!.textContent = 'Goede reis!';
+  $('#result-message')!.textContent = `Je hebt alle ${state.route?.intermediateCount} tussenstations gevonden in ${state.guessCount} pogingen!`;
+  $('#result-route')!.classList.add('hidden');
 
   openModal('result');
 }

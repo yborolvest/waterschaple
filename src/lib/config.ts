@@ -2,7 +2,7 @@
 
 export const MAX_ATTEMPTS = 6;
 export const MAX_DISTANCE_KM = 350;
-export const EPOCH_DATE = new Date('2024-01-01');
+export const EPOCH_DATE = new Date('2026-06-18');
 export const STORAGE_KEY = 'gemeentedle_stats_v1';
 
 /** Iedereen dezelfde kalenderdag — Nederlandse tijdzone */

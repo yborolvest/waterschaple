@@ -1,21 +1,22 @@
 import { findStationById, type Station } from '../../data/stations';
 import { OVERSTAPLE_PUZZLES, STATION_NEIGHBORS } from '../../data/station-connections';
 import { getDayIndex, getDayIndexFromKey, getYesterdayDateKey } from '../game-logic';
-import { GUESS_BUFFER } from './config';
-import { bfsDistances, findShortestPathIds, pathToIntermediate } from './pathfinding';
+import { bfsDistances, findShortestPathIds, pathToDailyPuzzleFields } from './pathfinding';
 import type { GuessQuality } from './types';
 
-export interface DailyPuzzle {
+export interface PuzzlePair {
   start: Station;
   end: Station;
+}
+
+export interface DailyPuzzle extends PuzzlePair {
   /** Geordend pad incl. start en eind */
   path: string[];
   intermediate: string[];
   hops: number;
-  maxGuesses: number;
 }
 
-function getPuzzleForDayIndex(dayIndex: number): DailyPuzzle | null {
+function getPuzzleDefForDayIndex(dayIndex: number) {
   const len = OVERSTAPLE_PUZZLES.length;
   if (!len) return null;
   let idx = ((dayIndex % len) + len) % len;
@@ -24,38 +25,40 @@ function getPuzzleForDayIndex(dayIndex: number): DailyPuzzle | null {
     idx = (idx + 1) % len;
     def = OVERSTAPLE_PUZZLES[idx];
   }
-  if (!def) return null;
+  return def;
+}
 
+export function getOverstaplePuzzlePair(date = new Date()): PuzzlePair | null {
+  return getOverstaplePuzzlePairForDayIndex(getDayIndex(date));
+}
+
+export function getOverstaplePuzzlePairForDayIndex(dayIndex: number): PuzzlePair | null {
+  const def = getPuzzleDefForDayIndex(dayIndex);
+  if (!def) return null;
   const start = findStationById(def.start);
   const end = findStationById(def.end);
   if (!start || !end) return null;
-
-  const path =
-    def.path?.length && def.path[0] === def.start && def.path[def.path.length - 1] === def.end
-      ? def.path
-      : (findShortestPathIds(def.start, def.end) ?? [def.start, def.end]);
-  const intermediate = pathToIntermediate(path);
-
-  return {
-    start,
-    end,
-    path,
-    intermediate: intermediate.length ? intermediate : def.intermediate,
-    hops: path.length - 1,
-    maxGuesses: (intermediate.length || def.intermediate.length) + GUESS_BUFFER,
-  };
+  return { start, end };
 }
 
+export function getYesterdayOverstaplePuzzlePair(date = new Date()): PuzzlePair | null {
+  return getOverstaplePuzzlePairForDayIndex(getDayIndexFromKey(getYesterdayDateKey(date)));
+}
+
+/** Graf-fallback voor sync callers / EN: Graph fallback for sync callers */
 export function getOverstapleDailyPuzzle(date = new Date()): DailyPuzzle | null {
-  return getPuzzleForDayIndex(getDayIndex(date));
+  const pair = getOverstaplePuzzlePair(date);
+  if (!pair) return null;
+  const path = findShortestPathIds(pair.start.id, pair.end.id) ?? [pair.start.id, pair.end.id];
+  return { ...pair, ...pathToDailyPuzzleFields(path) };
 }
 
 export function getOverstapleDailyPuzzleFromKey(dateKey: string): DailyPuzzle | null {
-  return getPuzzleForDayIndex(getDayIndexFromKey(dateKey));
+  return getOverstapleDailyPuzzle(new Date(`${dateKey}T12:00:00`));
 }
 
 export function getYesterdayOverstaplePuzzle(date = new Date()): DailyPuzzle | null {
-  return getPuzzleForDayIndex(getDayIndexFromKey(getYesterdayDateKey(date)));
+  return getOverstapleDailyPuzzleFromKey(getYesterdayDateKey(date));
 }
 
 export function getOverstapleSolveCounterKey(puzzleNumber: number, dateKey: string): string {
@@ -83,6 +86,10 @@ function isReachableFromStart(
   return false;
 }
 
+function puzzlePathHops(puzzle: DailyPuzzle): number {
+  return Math.max(0, puzzle.path.length - 1);
+}
+
 export function evaluateOverstapleGuess(
   guessId: string,
   puzzle: DailyPuzzle,
@@ -97,10 +104,10 @@ export function evaluateOverstapleGuess(
   }
 
   const intermediateSet = new Set(puzzle.intermediate);
+  const pathTotal = puzzlePathHops(puzzle);
   const fromStart = bfsDistances(puzzle.start.id);
   const fromEnd = bfsDistances(puzzle.end.id);
-  const totalDist = fromStart.get(puzzle.end.id);
-  if (totalDist === undefined) return { quality: 'red', isDuplicate: false };
+  if (pathTotal === 0) return { quality: 'red', isDuplicate: false };
 
   const ds = fromStart.get(guessId);
   const de = fromEnd.get(guessId);
@@ -114,7 +121,7 @@ export function evaluateOverstapleGuess(
     return { quality: connected ? 'connected' : 'green', isDuplicate: false };
   }
 
-  if (ds + de === totalDist + 1) {
+  if (ds + de === pathTotal + 1) {
     return { quality: 'orange', isDuplicate: false };
   }
 

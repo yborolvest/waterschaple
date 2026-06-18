@@ -11,6 +11,7 @@
     "generate:stations": "node scripts/generate-stations.mjs",
     "fetch:flags": "node scripts/fetch-gemeente-flags.mjs",
     "generate:snelweg-geometries": "node scripts/generate-snelweg-geometries.mjs",
+    "prefetch:overstaple": "npx tsx scripts/prefetch-overstaple-routes.mjs",
     "data:refresh": "node scripts/generate-gemeenten.mjs && node scripts/fetch-gemeente-flags.mjs"
   },
   "dependencies": {
