@@ -7,16 +7,18 @@ const FILE_PATH = join(DATA_DIR, 'solves.json');
 
 type SolveStore = Record<string, number>;
 
+function serverEnv(name: 'UPSTASH_REDIS_REST_URL' | 'UPSTASH_REDIS_REST_TOKEN'): string | undefined {
+  return process.env[name] ?? import.meta.env[name];
+}
+
 function useUpstash(): boolean {
-  return Boolean(
-    import.meta.env.UPSTASH_REDIS_REST_URL && import.meta.env.UPSTASH_REDIS_REST_TOKEN,
-  );
+  return Boolean(serverEnv('UPSTASH_REDIS_REST_URL') && serverEnv('UPSTASH_REDIS_REST_TOKEN'));
 }
 
 function getRedis(): Redis {
   return new Redis({
-    url: import.meta.env.UPSTASH_REDIS_REST_URL!,
-    token: import.meta.env.UPSTASH_REDIS_REST_TOKEN!,
+    url: serverEnv('UPSTASH_REDIS_REST_URL')!,
+    token: serverEnv('UPSTASH_REDIS_REST_TOKEN')!,
   });
 }
 

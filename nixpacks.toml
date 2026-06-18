@@ -1,0 +1,18 @@
+# NL: Nixpacks-build (Coolify, Railway, etc.) / EN: Nixpacks deploy configuration
+# https://nixpacks.com/docs/configuration/file
+
+[variables]
+NODE_ENV = "production"
+HOST = "0.0.0.0"
+
+[phases.setup]
+nixPkgs = ["nodejs_22"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "npm run start"

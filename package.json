@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "start": "node ./dist/server/entry.mjs",
     "preview": "astro preview",
     "generate:gemeenten": "node scripts/generate-gemeenten.mjs",
     "generate:stations": "node scripts/generate-stations.mjs",
@@ -13,6 +14,9 @@
     "generate:snelweg-geometries": "node scripts/generate-snelweg-geometries.mjs",
     "prefetch:overstaple": "npx tsx scripts/prefetch-overstaple-routes.mjs",
     "data:refresh": "node scripts/generate-gemeenten.mjs && node scripts/fetch-gemeente-flags.mjs"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "dependencies": {
     "@astrojs/node": "^9.2.2",

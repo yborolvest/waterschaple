@@ -29,11 +29,22 @@ Zonder Upstash-credentials wordt de teller lokaal opgeslagen in `.data/solves.js
 
 ```bash
 npm run build
-npm run preview
+npm run start
 ```
 
 **NL:** Hybrid Astro-app — vereist een **Node-server** (geen pure static hosting).  
 **EN:** Requires Node runtime (`@astrojs/node`). Deploy to Railway, Render, Fly.io, or similar.
+
+### Nixpacks (Coolify / Railway)
+
+Het project bevat een `nixpacks.toml`. De build draait `npm ci` + `npm run build`; de container start met `npm run start` (`node ./dist/server/entry.mjs`).
+
+1. Koppel de repo aan je platform (Nixpacks als buildpack)
+2. Zet omgevingsvariabelen:
+   - `UPSTASH_REDIS_REST_URL` (aanbevolen in productie)
+   - `UPSTASH_REDIS_REST_TOKEN`
+   - `NS_API_SUBSCRIPTION_KEY` (optioneel, voor Overstaple NS-routes)
+3. `PORT` wordt door het platform gezet; `HOST=0.0.0.0` staat in `nixpacks.toml`
 
 ### Productie / Production
 
