@@ -28,7 +28,7 @@ export const DAILY_GAMES: DailyGame[] = [
     emoji: '🏛️',
     tagline: 'Voor de lokaal bestuur liefhebbers',
     description:
-      'Vind de juiste Nederlandse gemeente in 6 pogingen.',
+      'Vind de juiste Nederlandse gemeente in 10 pogingen.',
     href: '/gemeentedle',
     available: true,
     storageKey: 'gemeentedle_stats_v1',

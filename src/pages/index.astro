@@ -3,6 +3,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteLogo from '../components/SiteLogo.astro';
 import { DAILY_GAMES } from '../data/games';
 import { getPuzzleNumber } from '../lib/game-logic';
+import { buildGameListJsonLd, buildWebSiteJsonLd, DEFAULT_DESCRIPTION, SITE_NAME } from '../lib/seo';
 
 const today = new Date();
 const puzzleNumber = getPuzzleNumber(today);
@@ -15,9 +16,11 @@ const dateStr = today.toLocaleDateString('nl-NL', {
 ---
 
 <BaseLayout
-  title="Rijkdle"
-  description="Speel Gemeentedle, Waterschaple, Snelwegdle en meer op Rijkdle — dagelijkse Nederlandse geo-raadspellen voor iedereen hetzelfde (NL-tijd)."
-  wave="blend"  
+  title={SITE_NAME}
+  description={DEFAULT_DESCRIPTION}
+  canonicalPath="/"
+  jsonLd={[buildWebSiteJsonLd(), buildGameListJsonLd()]}
+  wave="blend"
 >
   <header class="hub-header relative z-10 px-4 pb-6 sm:pb-8 backdrop-blur-sm">
     <div class="max-w-lg mx-auto text-center">

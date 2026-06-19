@@ -21,7 +21,7 @@ import {
 } from '../../lib/server/solve-store';
 import { checkRateLimit, getClientIp } from '../../lib/server/rate-limit';
 import { getUnlockedHints } from '../../lib/hints';
-import { USE_RANDOM_TARGET_FOR_TESTING } from '../../lib/config';
+import { USE_RANDOM_TARGET_FOR_TESTING, MAX_ATTEMPTS } from '../../lib/gemeentedle/config';
 
 interface GuessBody {
   gemeenteId?: string;
@@ -122,7 +122,7 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
   }
 
   const isGameOver =
-    result.isCorrect || (typeof attemptNumber === 'number' && attemptNumber >= 6);
+    result.isCorrect || (typeof attemptNumber === 'number' && attemptNumber >= MAX_ATTEMPTS);
 
   const response: Record<string, unknown> = {
     gemeente: toPublicGemeente(guess),

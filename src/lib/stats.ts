@@ -1,6 +1,15 @@
-import { MAX_ATTEMPTS, STORAGE_KEY } from './config';
+import { MAX_ATTEMPTS, STORAGE_KEY } from './gemeentedle/config';
 import { daysBetween } from './game-logic';
 import type { Guess, PlayerStats, SerializedGuess } from './types';
+
+function normalizeDistribution(dist: number[] | undefined): number[] {
+  const arr = Array(MAX_ATTEMPTS).fill(0);
+  if (!dist) return arr;
+  dist.forEach((n, i) => {
+    if (i < arr.length) arr[i] = n;
+  });
+  return arr;
+}
 
 export function createDefaultStats(): PlayerStats {
   return {
@@ -8,7 +17,7 @@ export function createDefaultStats(): PlayerStats {
     maxStreak: 0,
     gamesPlayed: 0,
     gamesWon: 0,
-    guessDistribution: [0, 0, 0, 0, 0, 0],
+    guessDistribution: Array(MAX_ATTEMPTS).fill(0),
     lastWinDate: null,
     lastPlayedDate: null,
     completedDates: [],
@@ -22,7 +31,12 @@ export function loadStats(): PlayerStats {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return createDefaultStats();
-    return { ...createDefaultStats(), ...JSON.parse(raw) };
+    const parsed = JSON.parse(raw);
+    return {
+      ...createDefaultStats(),
+      ...parsed,
+      guessDistribution: normalizeDistribution(parsed.guessDistribution),
+    };
   } catch {
     return createDefaultStats();
   }

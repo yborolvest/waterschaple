@@ -1,4 +1,4 @@
-import { MAX_ATTEMPTS, GLOBAL_COUNT_REFRESH_MS, USE_RANDOM_TARGET_FOR_TESTING, HINT_FLAG_AFTER_ATTEMPT, HINT_PROVINCE_AFTER_ATTEMPT } from '../lib/config';
+import { MAX_ATTEMPTS, GLOBAL_COUNT_REFRESH_MS, USE_RANDOM_TARGET_FOR_TESTING, HINT_FLAG_AFTER_ATTEMPT, HINT_PROVINCE_AFTER_ATTEMPT } from '../lib/gemeentedle/config';
 import { proximityToShareEmoji } from '../lib/game-logic';
 import {
   loadStats,

@@ -1,4 +1,4 @@
-import { MAX_DISTANCE_KM, EPOCH_DATE, GAME_TIMEZONE } from './config';
+import { MAX_DISTANCE_KM, EPOCH_DATE, GAME_TIMEZONE } from './gemeentedle/config';
 import { GEMEENTEN, type Gemeente } from '../data/gemeenten';
 
 const MS_PER_DAY = 1000 * 60 * 60 * 24;

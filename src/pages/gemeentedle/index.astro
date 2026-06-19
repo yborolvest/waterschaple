@@ -3,11 +3,7 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import GameLoop from '../../components/GameLoop.astro';
 ---
 
-<BaseLayout
-  title="Gemeentedle 🏛️"
-  description="Raad de gemeente van vandaag — het dagelijkse Nederlandse geo-raadspel."
-  wave="orange"
->
+<BaseLayout gameId="gemeentedle" wave="orange">
   <header class="relative z-10 px-4 py-5 sm:py-6 backdrop-blur-sm">
     <div class="max-w-lg mx-auto">
       <a
@@ -149,10 +145,10 @@ import GameLoop from '../../components/GameLoop.astro';
         <ul class="space-y-3 text-sm text-gray-700 leading-relaxed">
           <li>🎯 Elke dag is er <strong>één gemeente</strong> het doelwit &mdash; voor <strong>alle spelers wereldwijd hetzelfde</strong>.</li>
           <li>📅 Het antwoord van <strong>gisteren</strong> staat altijd bovenaan het scherm.</li>
-          <li>🔄 Je hebt <strong>6 pogingen</strong> om de juiste gemeente te vinden.</li>
+          <li>🔄 Je hebt <strong>10 pogingen</strong> om de juiste gemeente te vinden.</li>
           <li>📍 Na elke gok zie je de <strong>afstand in km</strong>, een <strong>pijl</strong> richting het doel, en een <strong>nabijheidsscore</strong> (0&ndash;100%).</li>
-          <li>🏳️ Na je <strong>2e poging</strong> wordt de <strong>gemeentevlag</strong> vrijgespeeld als hint.</li>
-          <li>🗺️ Na je <strong>4e poging</strong> zie je in welke <strong>provincie</strong> de gemeente ligt.</li>
+          <li>🏳️ Na je <strong>3e poging</strong> wordt de <strong>gemeentevlag</strong> vrijgespeeld als hint.</li>
+          <li>🗺️ Na je <strong>7e poging</strong> zie je in welke <strong>provincie</strong> de gemeente ligt.</li>
           <li>🟩 <strong>100%</strong> betekent dat je de juiste gemeente hebt geraden!</li>
           <li>🧭 De pijl wijst van jouw gok <em>naar</em> de doelgemeente.</li>
           <li>📤 Deel je score met vrienden via de deelknop na afloop.</li>

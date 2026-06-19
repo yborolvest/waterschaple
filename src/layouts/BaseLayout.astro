@@ -3,18 +3,48 @@ import '../styles/global.css';
 import ThemeToggle from '../components/ThemeToggle.astro';
 import CookieBanner from '../components/CookieBanner.astro';
 import { BRAND_ASSETS } from '../lib/brand';
+import {
+  absoluteUrl,
+  formatPageTitle,
+  jsonLdScript,
+  resolvePageSeo,
+  SITE_AUTHOR,
+  SITE_LANGUAGE,
+  SITE_LOCALE,
+  SITE_NAME,
+  SITE_TWITTER,
+  type OgType,
+} from '../lib/seo';
 
 interface Props {
   title?: string;
   description?: string;
   wave?: 'orange' | 'teal' | 'highway' | 'rail' | 'transfer' | 'blend';
+  canonicalPath?: string;
+  ogImage?: string;
+  ogImageAlt?: string;
+  ogImageWidth?: number;
+  ogImageHeight?: number;
+  ogType?: OgType;
+  noindex?: boolean;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  gameId?: string;
 }
 
 const {
-  title = 'Gemeentedle 🏛️',
-  description = 'Raad de gemeente van vandaag — het dagelijkse Nederlandse geo-raadspel.',
   wave = 'orange',
+  ...seoInput
 } = Astro.props;
+
+const seo = resolvePageSeo({
+  ...seoInput,
+  canonicalPath: seoInput.canonicalPath ?? Astro.url.pathname,
+});
+
+const pageTitle = formatPageTitle(seo.title);
+const canonicalUrl = absoluteUrl(seo.canonicalPath);
+const ogImageUrl = absoluteUrl(seo.ogImage!);
+const structuredData = jsonLdScript(seo.jsonLd);
 
 const waveClass =
   wave === 'teal'
@@ -31,16 +61,49 @@ const waveClass =
 ---
 
 <!doctype html>
-<html lang="nl" data-theme="dark">
+<html lang={SITE_LANGUAGE} data-theme="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content={description} />
+    <title>{pageTitle}</title>
+    <meta name="description" content={seo.description} />
+    <meta name="author" content={SITE_AUTHOR} />
+    <meta name="application-name" content={SITE_NAME} />
+    <meta name="apple-mobile-web-app-title" content={SITE_NAME} />
+    {seo.noindex ? (
+      <meta name="robots" content="noindex, nofollow" />
+    ) : (
+      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    )}
+    <link rel="canonical" href={canonicalUrl} />
+    <link rel="alternate" hreflang={SITE_LANGUAGE} href={canonicalUrl} />
+    <link rel="alternate" hreflang="x-default" href={canonicalUrl} />
+
+    <meta property="og:type" content={seo.ogType} />
+    <meta property="og:site_name" content={SITE_NAME} />
+    <meta property="og:locale" content={SITE_LOCALE} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={seo.description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={ogImageUrl} />
+    <meta property="og:image:alt" content={seo.ogImageAlt} />
+    <meta property="og:image:width" content={String(seo.ogImageWidth)} />
+    <meta property="og:image:height" content={String(seo.ogImageHeight)} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content={SITE_TWITTER} />
+    <meta name="twitter:title" content={pageTitle} />
+    <meta name="twitter:description" content={seo.description} />
+    <meta name="twitter:image" content={ogImageUrl} />
+    <meta name="twitter:image:alt" content={seo.ogImageAlt} />
+
     <link rel="icon" id="brand-favicon-svg" data-brand-icon="svg" href={BRAND_ASSETS.mark.dark.svg} type="image/svg+xml" />
     <link rel="icon" id="brand-favicon-png" data-brand-icon="png" href={BRAND_ASSETS.mark.dark.png} type="image/png" sizes="256x256" />
     <link rel="apple-touch-icon" id="brand-favicon-apple" data-brand-icon="apple" href={BRAND_ASSETS.mark.dark.png2x} />
     <meta name="theme-color" content="#154273" />
-    <title>{title}</title>
+    {structuredData && (
+      <script type="application/ld+json" set:html={structuredData} />
+    )}
     <script is:inline>
       (function () {
         var KEY = 'rijkdle-theme';

@@ -1,4 +1,4 @@
-import { HINT_FLAG_AFTER_ATTEMPT, HINT_PROVINCE_AFTER_ATTEMPT } from './config';
+import { HINT_FLAG_AFTER_ATTEMPT, HINT_PROVINCE_AFTER_ATTEMPT } from './gemeentedle/config';
 import { getGemeenteFlagUrl } from '../data/gemeente-flags';
 import type { Gemeente } from '../data/gemeenten';
 import type { UnlockedHints } from './types';

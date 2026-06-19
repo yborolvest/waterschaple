@@ -1,4 +1,10 @@
 ---
+import {
+  MAX_ATTEMPTS,
+  HINT_FLAG_AFTER_ATTEMPT,
+  HINT_PROVINCE_AFTER_ATTEMPT,
+} from '../lib/gemeentedle/config';
+
 /** Interactieve spelinterface — autocomplete, pogingen, resultatentabel */
 ---
 
@@ -7,7 +13,7 @@
     <div class="flex items-center justify-between mb-4">
       <p class="text-sm text-white/60">
         Poging <span id="attempt-current" class="text-orange-accent font-semibold">1</span>
-        van <span class="font-semibold">6</span>
+        van <span class="font-semibold">{MAX_ATTEMPTS}</span>
       </p>
       <div class="flex gap-1.5" id="attempt-dots" aria-hidden="true"></div>
     </div>
@@ -27,7 +33,7 @@
             class="flex flex-col items-center justify-center h-20 w-full rounded-lg bg-white/5 text-white/30 text-sm"
           >
             <span aria-hidden="true" class="text-2xl mb-1">🏳️</span>
-            <span>Na 2e poging</span>
+            <span>Na {HINT_FLAG_AFTER_ATTEMPT}e poging</span>
           </div>
           <img
             id="hint-flag-img"
@@ -53,7 +59,7 @@
             class="flex flex-col items-center justify-center h-20 rounded-lg bg-white/5 text-white/30 text-sm"
           >
             <span aria-hidden="true" class="text-2xl mb-1">🗺️</span>
-            <span>Na 4e poging</span>
+            <span>Na {HINT_PROVINCE_AFTER_ATTEMPT}e poging</span>
           </div>
           <p id="hint-province-text" class="hidden text-lg font-bold text-orange-light text-center py-4"></p>
         </div>
