@@ -1,48 +1,90 @@
 # Coolify deploy / NL-EN
 
-## Domein: https://rijkdle.nl
+## Symptoom: 404 page not found (19 bytes)
 
-De publieke 404 (`404 page not found`, 19 bytes) komt van **Traefik**, niet van Astro.
-De health check slaagt in de container; Traefik routeert verkeer niet naar de juiste poort.
+Dit is **Traefik** op je Coolify-server — niet Astro. De app draait in de container, maar Traefik heeft **geen route** naar `rijkdle.nl`.
 
-### Verplichte Coolify-instellingen
+Cloudflare (oranje wolk) is OK; DNS wijst naar Cloudflare → origin → Traefik.
 
-1. **Build Pack** → Dockerfile (of Nixpacks)
-2. **Is it a static site?** → **UIT**
-3. **Is it a SPA?** → **UIT**
-4. **Ports Exposes** → **`80`** (moet gelijk zijn aan `PORT` in de container)
-5. **Domains** → `https://rijkdle.nl`  
-   - Als 404 blijft: probeer tijdelijk `https://rijkdle.nl:80` en **Save + Redeploy**  
-   - (Coolify zet dan het Traefik `loadbalancer.server.port`-label)
-6. **Health check port** → **`80`**, path `/api/health`
-7. Na elke wijziging: **Save** → **Redeploy**
+---
 
-### Cloudflare
+## Oplossing (aanbevolen): Docker Compose build pack
 
-DNS mag via Cloudflare (oranje wolk). Origin moet naar je Coolify-server wijzen.
-Traefik op Coolify regelt SSL; gebruik in Cloudflare meestal **Full** of **Full (strict)**.
+Dockerfile- en Nixpacks-deploys missen soms het Traefik `loadbalancer.server.port`-label. Gebruik daarom **`docker-compose.yaml`** uit deze repo.
 
-## Diagnose
+### Stap voor stap
 
-| Response | Betekenis |
-|----------|-----------|
-| `404 page not found` (19 bytes, `text/plain`) | Traefik heeft geen route / verkeerde poort |
-| `nginx` in headers | Static site modus nog aan |
-| App-HTML van Rijkdle | Werkt |
+1. **Verwijder** het oude Coolify-resource of maak een **nieuwe** application aan (zelfde repo).
+2. **Build Pack** → **Docker Compose**
+3. Compose file → `docker-compose.yaml` (standaard)
+4. **Is it a static site?** → **UIT**
+5. **Is it a SPA?** → **UIT**
+6. **Make it publicly available** → **AAN** (belangrijk!)
+7. **Domains** → exact:
+   ```
+   https://rijkdle.nl:3000
+   ```
+   De `:3000` is verplicht — Coolify zet daarmee de Traefik backend-poort.
+8. **Ports Exposes** → `3000`
+9. **Health check** → port `3000`, path `/api/health`
+10. **Save** → **Redeploy**
 
-## Logs (OK)
+### Controleren of het werkt
 
+```bash
+curl -I https://rijkdle.nl/
+# Verwacht: geen "404 page not found" van Traefik
+
+curl https://rijkdle.nl/api/health
+# Verwacht: {"ok":true,"service":"rijkdle"}
+# Header: X-Rijkdle: ok
 ```
-[rijkdle] Starting SSR server on 0.0.0.0:80
-[@astrojs/node] Server listening on
-  network: http://172.x.x.x:80
-```
+
+Zie je nog steeds `404 page not found` (19 bytes)? → Traefik-route ontbreekt nog. Controleer domein + redeploy.
+
+Zie je `502` / `503` / `no available server`? → Container bereikbaar maar ongezond of verkeerde poort.
+
+---
+
+## Alternatief: Dockerfile / Nixpacks
+
+Alleen als Docker Compose niet kan:
+
+| Veld | Waarde |
+|------|--------|
+| Build Pack | Dockerfile of Nixpacks |
+| Ports Exposes | `3000` |
+| Domains | `https://rijkdle.nl:3000` |
+| Static site / SPA | UIT |
+| Publicly available | AAN |
+
+---
+
+## Cloudflare SSL
+
+| Cloudflare | Coolify |
+|------------|---------|
+| SSL/TLS mode → **Full** of **Full (strict)** | HTTPS aan op domein |
+
+**Niet** "Flexible" — dat breekt HTTPS naar Traefik.
+
+---
+
+## Health check faalt → site offline
+
+Traefik routeert **niet** naar unhealthy containers (lijkt soms op 404).
+
+- Test: health check **tijdelijk uitzetten** → redeploy → werkt de site dan?
+- Logs: `[rijkdle] Starting SSR server on 0.0.0.0:3000`
+- In container: `curl http://127.0.0.1:3000/api/health`
+
+---
 
 ## Omgevingsvariabelen
 
 | Variabele | Doel |
 |-----------|------|
-| `PORT` | `80` (zelfde als Ports Exposes) |
+| `PORT` | `3000` |
 | `HOST` | `0.0.0.0` |
 | `UPSTASH_REDIS_REST_URL` | Solve-teller |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash token |

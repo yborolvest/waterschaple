@@ -22,16 +22,16 @@ RUN apt-get update \
 
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
-ENV PORT=80
+ENV PORT=3000
 
 COPY --from=build /app/dist ./dist
 COPY --from=deps /app/node_modules ./node_modules
 COPY package.json ./
 COPY scripts/start-production.mjs ./scripts/
 
-EXPOSE 80
+EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
-  CMD curl -fsS "http://127.0.0.1:${PORT}/api/health" || exit 1
+  CMD curl -fsS http://127.0.0.1:3000/api/health || exit 1
 
 CMD ["node", "./scripts/start-production.mjs"]
