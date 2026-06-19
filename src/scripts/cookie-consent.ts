@@ -6,18 +6,36 @@ import {
   type CookieConsent,
 } from '../lib/cookie-consent';
 
+export const COOKIE_UI_HIDDEN_CLASS = 'cookie-consent-hidden';
+
 function $(id: string): HTMLElement | null {
   return document.getElementById(id);
 }
 
+export function syncCookieConsentUI(): void {
+  const banner = $('cookie-banner');
+  const settings = $('cookie-settings');
+  if (!banner || !settings) return;
+
+  const consent = getCookieConsent();
+  if (consent === 'accepted' || consent === 'rejected') {
+    banner.classList.add(COOKIE_UI_HIDDEN_CLASS);
+    settings.classList.remove(COOKIE_UI_HIDDEN_CLASS);
+    return;
+  }
+
+  banner.classList.remove(COOKIE_UI_HIDDEN_CLASS);
+  settings.classList.add(COOKIE_UI_HIDDEN_CLASS);
+}
+
 function showBanner(): void {
-  $('cookie-banner')?.classList.remove('hidden');
-  $('cookie-settings')?.classList.add('hidden');
+  $('cookie-banner')?.classList.remove(COOKIE_UI_HIDDEN_CLASS);
+  $('cookie-settings')?.classList.add(COOKIE_UI_HIDDEN_CLASS);
 }
 
 function hideBanner(): void {
-  $('cookie-banner')?.classList.add('hidden');
-  $('cookie-settings')?.classList.remove('hidden');
+  $('cookie-banner')?.classList.add(COOKIE_UI_HIDDEN_CLASS);
+  $('cookie-settings')?.classList.remove(COOKIE_UI_HIDDEN_CLASS);
 }
 
 function applyConsent(consent: CookieConsent): void {
@@ -31,17 +49,13 @@ function applyConsent(consent: CookieConsent): void {
 }
 
 export function initCookieConsent(): void {
+  syncCookieConsentUI();
+
   const consent = getCookieConsent();
   if (consent === 'accepted') {
     loadUmamiAnalytics();
-    hideBanner();
     return;
   }
-  if (consent === 'rejected') {
-    hideBanner();
-    return;
-  }
-  showBanner();
 }
 
 export function openCookieSettings(): void {
@@ -56,6 +70,7 @@ export function initCookieConsentUI(): void {
   $('cookie-settings')?.addEventListener('click', openCookieSettings);
 
   window.addEventListener('cookieconsentchange', () => {
+    syncCookieConsentUI();
     const consent = getCookieConsent();
     if (consent === 'accepted') loadUmamiAnalytics();
     if (consent === 'rejected') removeUmamiAnalytics();

@@ -1,10 +1,11 @@
 ---
 /** NL: GDPR cookiebanner / EN: GDPR cookie consent banner */
+import { COOKIE_CONSENT_KEY } from '../lib/cookie-consent';
 ---
 
 <div
   id="cookie-banner"
-  class="cookie-banner hidden"
+  class="cookie-banner cookie-consent-hidden"
   role="dialog"
   aria-labelledby="cookie-banner-title"
   aria-describedby="cookie-banner-desc"
@@ -32,11 +33,35 @@
 <button
   type="button"
   id="cookie-settings"
-  class="cookie-settings hidden"
+  class="cookie-settings cookie-consent-hidden"
   aria-label="Cookievoorkeuren wijzigen"
 >
   Cookies
 </button>
+
+<script is:inline define:vars={{ consentKey: COOKIE_CONSENT_KEY }}>
+  (function () {
+    var consent = null;
+    try {
+      consent = localStorage.getItem(consentKey);
+    } catch (error) {
+      consent = null;
+    }
+
+    var banner = document.getElementById('cookie-banner');
+    var settings = document.getElementById('cookie-settings');
+    if (!banner || !settings) return;
+
+    if (consent === 'accepted' || consent === 'rejected') {
+      banner.classList.add('cookie-consent-hidden');
+      settings.classList.remove('cookie-consent-hidden');
+      return;
+    }
+
+    banner.classList.remove('cookie-consent-hidden');
+    settings.classList.add('cookie-consent-hidden');
+  })();
+</script>
 
 <script>
   import { initCookieConsentUI } from '../scripts/cookie-consent';
@@ -44,12 +69,16 @@
 </script>
 
 <style>
+  .cookie-consent-hidden {
+    display: none !important;
+  }
+
   .cookie-banner {
     position: fixed;
     left: 0;
     right: 0;
     bottom: 0;
-    z-index: 50;
+    z-index: 100;
     padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
     pointer-events: none;
   }
@@ -139,8 +168,8 @@
   .cookie-settings {
     position: fixed;
     left: 1rem;
-    bottom: 1rem;
-    z-index: 39;
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    z-index: 100;
     font-size: 0.6875rem;
     font-weight: 600;
     letter-spacing: 0.02em;
@@ -152,6 +181,7 @@
     backdrop-filter: blur(8px);
     cursor: pointer;
     transition: color 0.2s ease, background-color 0.2s ease;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
   }
 
   .cookie-settings:hover {
