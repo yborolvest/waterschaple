@@ -1,85 +1,52 @@
 # Coolify deploy / NL-EN
 
-## Belangrijk: je app draait al
+## Domein: https://rijkdle.nl
 
-Als de logs tonen:
+De publieke 404 (`404 page not found`, 19 bytes) komt van **Traefik**, niet van Astro.
+De health check slaagt in de container; Traefik routeert verkeer niet naar de juiste poort.
+
+### Verplichte Coolify-instellingen
+
+1. **Build Pack** → Dockerfile (of Nixpacks)
+2. **Is it a static site?** → **UIT**
+3. **Is it a SPA?** → **UIT**
+4. **Ports Exposes** → **`80`** (moet gelijk zijn aan `PORT` in de container)
+5. **Domains** → `https://rijkdle.nl`  
+   - Als 404 blijft: probeer tijdelijk `https://rijkdle.nl:80` en **Save + Redeploy**  
+   - (Coolify zet dan het Traefik `loadbalancer.server.port`-label)
+6. **Health check port** → **`80`**, path `/api/health`
+7. Na elke wijziging: **Save** → **Redeploy**
+
+### Cloudflare
+
+DNS mag via Cloudflare (oranje wolk). Origin moet naar je Coolify-server wijzen.
+Traefik op Coolify regelt SSL; gebruik in Cloudflare meestal **Full** of **Full (strict)**.
+
+## Diagnose
+
+| Response | Betekenis |
+|----------|-----------|
+| `404 page not found` (19 bytes, `text/plain`) | Traefik heeft geen route / verkeerde poort |
+| `nginx` in headers | Static site modus nog aan |
+| App-HTML van Rijkdle | Werkt |
+
+## Logs (OK)
 
 ```
+[rijkdle] Starting SSR server on 0.0.0.0:80
 [@astrojs/node] Server listening on
-  network: http://172.x.x.x:4321
+  network: http://172.x.x.x:80
 ```
-
-…dan start Node goed. Een **404 komt dan bijna altijd van de proxy** (verkeerde poort of static/Nginx-modus), niet van Astro.
-
-## Stappen (Nixpacks)
-
-1. **Is it a static site?** → **UIT** (geen publish directory invullen)
-2. **Is it a SPA?** → **UIT**
-3. **Ports Exposes** → `4321` (exact hetzelfde als in de logs)
-4. **Build Pack** → Nixpacks
-5. **Start command** → leeg laten (`node ./scripts/start-production.mjs` via `nixpacks.toml`)
-6. **Save** en **Redeploy** (Coolify slaat niet altijd automatisch op)
-
-`nixpacks.toml` bevat `providers = ["node"]` zodat Nixpacks **geen** Caddy/Nginx voor Vite/Astro toevoegt.
-
-## Alternatief: Dockerfile (aanbevolen bij aanhoudende 404)
-
-1. **Build Pack** → **Dockerfile**
-2. **Ports Exposes** → `4321`
-3. Static site → **UIT**
-4. Redeploy
-
-## Diagnose 404
-
-| Symptoom | Oorzaak | Oplossing |
-|----------|---------|-----------|
-| Response header `nginx` | Static site modus | Static + SPA uit |
-| App op `4321`, Coolify op `3000`/`80` | Poort mismatch | Zet **Ports Exposes** op `4321` |
-| Alleen `/` 404, logs OK | Proxy wijst niet naar container | Controleer domain + redeploy |
-| `network: …:4321` in logs | Node OK | Fix Coolify network settings |
-
-## Health check (Coolify)
-
-Coolify voert HTTP-checks **in de container** uit en heeft **curl** of **wget** nodig (staat in de Dockerfile).
-
-| Veld | Waarde |
-|------|--------|
-| **Enabled** | Aan |
-| **Port** | `4321` (zelfde als Ports Exposes) |
-| **Path** | `/api/health` of `/health` |
-| **Method** | `GET` |
-| **Response text** | leeg laten, of `ok` bij path `/health` |
-
-De Dockerfile bevat ook een ingebouwde `HEALTHCHECK` op `/api/health`.
-
-**Start period:** zet minstens `60s` — Astro SSR heeft even nodig om op te starten.
-
-## Health check
-
-- URL: `/api/health`
-- Verwacht: `{"ok":true}`
-
-Test **binnen het Coolify-netwerk** of via het publieke domein na deploy.
 
 ## Omgevingsvariabelen
 
 | Variabele | Doel |
 |-----------|------|
-| `PORT` | Moet gelijk zijn aan **Ports Exposes** (default `4321`) |
-| `HOST` | `0.0.0.0` (staat in `nixpacks.toml` / Dockerfile) |
-| `UPSTASH_REDIS_REST_URL` | Solve-teller (productie) |
+| `PORT` | `80` (zelfde als Ports Exposes) |
+| `HOST` | `0.0.0.0` |
+| `UPSTASH_REDIS_REST_URL` | Solve-teller |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash token |
 | `NS_API_SUBSCRIPTION_KEY` | Overstaple NS-routes |
-
-## Logs na deploy
-
-```
-[rijkdle] Starting SSR server on 0.0.0.0:4321
-[@astrojs/node] Server listening on
-  network: http://172.x.x.x:4321
-```
-
-Als `PORT` in de eerste regel niet overeenkomt met **Ports Exposes**, pas Coolify aan.
 
 ---
 
