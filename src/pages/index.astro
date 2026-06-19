@@ -74,17 +74,30 @@ const dateStr = today.toLocaleDateString('nl-NL', {
                       <h3 class:list={['text-xl font-bold transition-[filter] duration-300 ease-out', game.accentText, 'group-hover:brightness-110']}>
                         {game.name}
                       </h3>
-                      <span
-                        data-game-status
-                        class:list={[
-                          'text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 transition-all duration-300 ease-out group-hover:scale-105',
-                          game.accentBg,
-                          game.accentBorder,
-                          game.accentText,
-                        ]}
-                      >
-                        Vandaag
-                      </span>
+                      <div class="flex items-center gap-1.5 shrink-0">
+                        <span
+                          data-game-streak
+                          class:list={[
+                            'hub-card__streak inline-flex items-center gap-0.5 text-xs font-semibold tabular-nums px-2 py-0.5 rounded-full border border-transparent transition-all duration-300 ease-out',
+                            game.accentText,
+                          ]}
+                          aria-label="Geen actieve reeks"
+                        >
+                          <span aria-hidden="true">🔥</span>
+                          <span data-streak-value>0</span>
+                        </span>
+                        <span
+                          data-game-status
+                          class:list={[
+                            'text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0 transition-all duration-300 ease-out group-hover:scale-105',
+                            game.accentBg,
+                            game.accentBorder,
+                            game.accentText,
+                          ]}
+                        >
+                          Vandaag
+                        </span>
+                      </div>
                     </div>
                     <p class:list={['text-sm font-medium mt-0.5', game.accentText]}>{game.tagline}</p>
                     <p class="text-white/60 text-sm mt-2 leading-relaxed">{game.description}</p>

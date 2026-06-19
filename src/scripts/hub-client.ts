@@ -4,6 +4,7 @@ import { DAILY_GAMES } from '../data/games';
 type GameStatus = 'not-played' | 'in-progress' | 'won' | 'lost';
 
 interface StoredStats {
+  currentStreak?: number;
   completedDates?: string[];
   history?: { date: string; won: boolean; attempts: number | null }[];
   todayGame?: { date: string; attempts?: number; gameOver?: boolean; won?: boolean };
@@ -39,6 +40,17 @@ const STATUS_COPY: Record<
   },
 };
 
+function getCurrentStreak(storageKey: string): number {
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return 0;
+    const stats = JSON.parse(raw) as StoredStats;
+    return stats.currentStreak ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
 function getGameStatus(storageKey: string, dateKey: string): GameStatus {
   try {
     const raw = localStorage.getItem(storageKey);
@@ -62,13 +74,21 @@ function getGameStatus(storageKey: string, dateKey: string): GameStatus {
   }
 }
 
-function updateGameCard(gameId: string, status: GameStatus, accentClasses: string): void {
+function updateGameCard(
+  gameId: string,
+  storageKey: string,
+  status: GameStatus,
+  accentClasses: string,
+): void {
   const card = document.querySelector<HTMLElement>(`[data-game-id="${gameId}"]`);
   if (!card) return;
 
   const copy = STATUS_COPY[status];
   const badge = card.querySelector<HTMLElement>('[data-game-status]');
   const cta = card.querySelector<HTMLElement>('[data-game-cta]');
+  const streakEl = card.querySelector<HTMLElement>('[data-game-streak]');
+  const streakValue = card.querySelector<HTMLElement>('[data-streak-value]');
+  const streak = getCurrentStreak(storageKey);
 
   if (badge) {
     badge.textContent = copy.badge;
@@ -82,6 +102,15 @@ function updateGameCard(gameId: string, status: GameStatus, accentClasses: strin
 
   card.dataset.status = status;
 
+  if (streakValue) streakValue.textContent = String(streak);
+  if (streakEl) {
+    streakEl.classList.toggle('hub-card__streak--active', streak > 0);
+    streakEl.setAttribute(
+      'aria-label',
+      streak > 0 ? `Huidige reeks: ${streak} ${streak === 1 ? 'dag' : 'dagen'}` : 'Geen actieve reeks',
+    );
+  }
+
   if (cta) {
     const label = cta.querySelector<HTMLElement>('[data-cta-label]');
     if (label) label.textContent = copy.cta;
@@ -89,7 +118,8 @@ function updateGameCard(gameId: string, status: GameStatus, accentClasses: strin
 
   const game = DAILY_GAMES.find((g) => g.id === gameId);
   if (game) {
-    card.setAttribute('aria-label', `${game.name}, ${copy.ariaSuffix}`);
+    const streakSuffix = streak > 0 ? `, reeks ${streak}` : '';
+    card.setAttribute('aria-label', `${game.name}, ${copy.ariaSuffix}${streakSuffix}`);
   }
 }
 
@@ -100,6 +130,6 @@ export function initHub(): void {
     if (!game.available || !game.storageKey) continue;
     const status = getGameStatus(game.storageKey, dateKey);
     const accentBadge = `${game.accentBg} ${game.accentBorder} ${game.accentText}`;
-    updateGameCard(game.id, status, accentBadge);
+    updateGameCard(game.id, game.storageKey, status, accentBadge);
   }
 }

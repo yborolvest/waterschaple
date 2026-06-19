@@ -206,6 +206,26 @@
   box-shadow: 0 6px 20px -4px rgb(0 0 0 / 0.2);
 }
 
+.hub-card__streak {
+  opacity: 0.45;
+}
+
+.hub-card__streak--active {
+  opacity: 1;
+  background-color: rgb(255 255 255 / 0.08);
+  border-color: rgb(255 255 255 / 0.12);
+}
+
+[data-theme='light'] .hub-card__streak {
+  opacity: 0.4;
+}
+
+[data-theme='light'] .hub-card__streak--active {
+  opacity: 1;
+  background-color: rgb(10 37 64 / 0.06);
+  border-color: rgb(10 37 64 / 0.1);
+}
+
 /* Per-game thema */
 .hub-card--gemeente {
   border-color: rgba(249, 115, 22, 0.22);
