@@ -1,7 +1,7 @@
 import { findStationById, type Station } from '../../data/stations';
-import { OVERSTAPLE_PUZZLES, STATION_NEIGHBORS } from '../../data/station-connections';
+import { OVERSTAPLE_PUZZLES } from '../../data/station-connections';
 import { getDayIndex, getDayIndexFromKey, getYesterdayDateKey, getDailyListIndex } from '../game-logic';
-import { bfsDistances, findShortestPathIds, pathToDailyPuzzleFields } from './pathfinding';
+import { bfsDistances } from './pathfinding';
 import type { GuessQuality } from './types';
 
 export interface PuzzlePair {
@@ -45,49 +45,24 @@ export function getYesterdayOverstaplePuzzlePair(date = new Date()): PuzzlePair 
   return getOverstaplePuzzlePairForDayIndex(getDayIndexFromKey(getYesterdayDateKey(date)));
 }
 
-/** Graf-fallback voor sync callers / EN: Graph fallback for sync callers */
-export function getOverstapleDailyPuzzle(date = new Date()): DailyPuzzle | null {
-  const pair = getOverstaplePuzzlePair(date);
-  if (!pair) return null;
-  const path = findShortestPathIds(pair.start.id, pair.end.id) ?? [pair.start.id, pair.end.id];
-  return { ...pair, ...pathToDailyPuzzleFields(path) };
-}
-
-export function getOverstapleDailyPuzzleFromKey(dateKey: string): DailyPuzzle | null {
-  return getOverstapleDailyPuzzle(new Date(`${dateKey}T12:00:00`));
-}
-
-export function getYesterdayOverstaplePuzzle(date = new Date()): DailyPuzzle | null {
-  return getOverstapleDailyPuzzleFromKey(getYesterdayDateKey(date));
-}
 
 export function getOverstapleSolveCounterKey(puzzleNumber: number, dateKey: string): string {
   return `overstaple:solves:${puzzleNumber}:${dateKey}`;
 }
 
-function isReachableFromStart(
-  startId: string,
-  targetId: string,
-  allowedIds: Set<string>,
-): boolean {
-  if (targetId === startId) return true;
-  const visited = new Set<string>([startId]);
-  const queue = [startId];
-  while (queue.length) {
-    const cur = queue.shift()!;
-    for (const n of STATION_NEIGHBORS[cur] ?? []) {
-      if (visited.has(n)) continue;
-      if (!allowedIds.has(n) && n !== targetId) continue;
-      if (n === targetId) return true;
-      visited.add(n);
-      queue.push(n);
-    }
-  }
-  return false;
-}
-
 function puzzlePathHops(puzzle: DailyPuzzle): number {
   return Math.max(0, puzzle.path.length - 1);
+}
+
+/** NL: Verbonden op NS-pad (alle eerdere tussenstops gevonden) / EN: Connected on NS route */
+function isConnectedOnNsPath(guessId: string, puzzle: DailyPuzzle, correctIds: string[]): boolean {
+  const idx = puzzle.path.indexOf(guessId);
+  if (idx < 0) return false;
+  const found = new Set(correctIds);
+  for (let i = 1; i < idx; i++) {
+    if (!found.has(puzzle.path[i])) return false;
+  }
+  return true;
 }
 
 export function evaluateOverstapleGuess(
@@ -105,23 +80,20 @@ export function evaluateOverstapleGuess(
 
   const intermediateSet = new Set(puzzle.intermediate);
   const pathTotal = puzzlePathHops(puzzle);
-  const fromStart = bfsDistances(puzzle.start.id);
-  const fromEnd = bfsDistances(puzzle.end.id);
   if (pathTotal === 0) return { quality: 'red', isDuplicate: false };
 
-  const ds = fromStart.get(guessId);
-  const de = fromEnd.get(guessId);
-  if (ds === undefined || de === undefined) return { quality: 'red', isDuplicate: false };
-
-  const onShortest = intermediateSet.has(guessId);
-
-  if (onShortest) {
-    const allowed = new Set([puzzle.start.id, ...correctIds, guessId]);
-    const connected = isReachableFromStart(puzzle.start.id, guessId, allowed);
+  // NS-route is leidend voor groen/verbonden / EN: NS route is authoritative for on-path guesses
+  if (intermediateSet.has(guessId)) {
+    const connected = isConnectedOnNsPath(guessId, puzzle, correctIds);
     return { quality: connected ? 'connected' : 'green', isDuplicate: false };
   }
 
-  if (ds + de === pathTotal + 1) {
+  // Oranje: één hop naast NS-pad (graaf alleen voor nabijheid) / EN: Orange via graph adjacency to NS path length
+  const fromStart = bfsDistances(puzzle.start.id);
+  const fromEnd = bfsDistances(puzzle.end.id);
+  const ds = fromStart.get(guessId);
+  const de = fromEnd.get(guessId);
+  if (ds !== undefined && de !== undefined && ds + de === pathTotal + 1) {
     return { quality: 'orange', isDuplicate: false };
   }
 
@@ -137,8 +109,6 @@ export function countRemaining(puzzle: DailyPuzzle, correctIds: string[]): numbe
   const found = new Set(correctIds);
   return puzzle.intermediate.filter((id) => !found.has(id)).length;
 }
-
-export { findShortestPathIds } from './pathfinding';
 
 export interface MapPoint {
   id: string;
@@ -177,7 +147,8 @@ export function buildOverstapleMapData(
   guesses: MapGuessInput[],
   gameOver: boolean,
 ): OverstapleMapData {
-  const path = puzzle.path.length >= 2 ? puzzle.path : [puzzle.start.id, puzzle.end.id];  const revealed = new Set([puzzle.start.id, puzzle.end.id, ...correctIds]);
+  const path = puzzle.path.length >= 2 ? puzzle.path : [puzzle.start.id, puzzle.end.id];
+  const revealed = new Set([puzzle.start.id, puzzle.end.id, ...correctIds]);
   if (gameOver) {
     for (const id of path) revealed.add(id);
   }

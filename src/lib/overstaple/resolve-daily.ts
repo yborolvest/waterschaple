@@ -21,9 +21,13 @@ export async function prefetchOverstapleRoutes(
     const pair = getOverstaplePuzzlePair(new Date(`${dateKey}T12:00:00`));
     if (!pair) continue;
 
-    const { path, source } = await resolveRoutePathForDay(dateKey, pair.start, pair.end);
-    results.push({ dateKey, source, hops: path.length - 1 });
-    console.log(`  ${dateKey}: ${pair.start.name} → ${pair.end.name} (${source}, ${path.length - 1} hops)`);
+    try {
+      const { path, source } = await resolveRoutePathForDay(dateKey, pair.start, pair.end);
+      results.push({ dateKey, source, hops: path.length - 1 });
+      console.log(`  ${dateKey}: ${pair.start.name} → ${pair.end.name} (${source}, ${path.length - 1} hops)`);
+    } catch (err) {
+      console.warn(`  ${dateKey}: ${pair.start.name} → ${pair.end.name} mislukt:`, err);
+    }
 
     if (offset < days - 1) await sleep(NS_ROUTE_PREFETCH_DELAY_MS);
   }
@@ -36,7 +40,10 @@ export async function resolveOverstapleDailyPuzzle(date = new Date()): Promise<D
   const pair = getOverstaplePuzzlePair(date);
   if (!pair) return null;
   const dateKey = getDateKey(date);
-  const { path } = await resolveRoutePathForDay(dateKey, pair.start, pair.end);
+  const { path, source } = await resolveRoutePathForDay(dateKey, pair.start, pair.end);
+  if (source === 'graph') {
+    console.warn(`[Overstaple] ${dateKey}: graaf-fallback (alleen zonder NS API-key)`);
+  }
   return { ...pair, ...pathToDailyPuzzleFields(path) };
 }
 

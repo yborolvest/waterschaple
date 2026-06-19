@@ -4,7 +4,10 @@ import { STATIONS, type Station } from '../../data/stations';
 import { findShortestPathIds } from './pathfinding';
 
 const NS_TRIPS_URL = 'https://gateway.apiportal.ns.nl/reisinformatie-api/api/v3/trips';
-const NS_TRIP_ADVICES = 8;const CACHE_DIR = join(process.cwd(), '.data', 'ns-routes');
+const NS_TRIP_ADVICES = 8;
+const NS_FETCH_TIMEOUT_MS = 20_000;
+const NS_FETCH_RETRIES = 3;
+const CACHE_DIR = join(process.cwd(), '.data', 'ns-routes');
 
 /** NL: Vertrektijd voor dienstregeling (geen live-storingen) / EN: Departure time for timetable query */
 export function dateKeyToPlannerDateTime(dateKey: string): string {
@@ -55,6 +58,59 @@ function slugify(name: string): string {
     .replace(/[''´`]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '');
+}
+
+/** NL: NS gebruikt afkortingen (bijv. "v" i.p.v. "van") / EN: NS stop name abbreviation variants */
+function nsNameVariants(name: string): string[] {
+  const lower = name.trim().toLowerCase();
+  const variants = new Set<string>([lower]);
+  variants.add(
+    lower
+      .replace(/\bv\b/g, 'van')
+      .replace(/\ba\/d\b/g, 'aan den')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  );
+  variants.add(
+    lower
+      .replace(/\bvan\b/g, 'v')
+      .replace(/\s+/g, ' ')
+      .trim(),
+  );
+  return [...variants];
+}
+
+function buildStationLookups() {
+  const byCode = new Map(STATIONS.map((s) => [s.code.toUpperCase(), s.id]));
+  const bySlug = new Map<string, string>();
+  const byName = new Map<string, string>();
+  for (const s of STATIONS) {
+    for (const variant of nsNameVariants(s.name)) {
+      bySlug.set(slugify(variant), s.id);
+      byName.set(variant, s.id);
+    }
+  }
+  return { byCode, bySlug, byName };
+}
+
+function lookupStationId(
+  name: string,
+  code: string,
+  lookups: ReturnType<typeof buildStationLookups>,
+): string | undefined {
+  const normalizedCode = code.toUpperCase();
+  if (normalizedCode) {
+    const fromCode =
+      normalizedCode.length <= 5
+        ? lookups.byCode.get(normalizedCode.slice(-4)) ?? lookups.byCode.get(normalizedCode)
+        : lookups.byCode.get(normalizedCode);
+    if (fromCode) return fromCode;
+  }
+  for (const variant of nsNameVariants(name)) {
+    const id = lookups.bySlug.get(slugify(variant)) ?? lookups.byName.get(variant);
+    if (id) return id;
+  }
+  return undefined;
 }
 
 function getApiKey(): string | undefined {
@@ -125,10 +181,16 @@ function tripTransfers(trip: NsTrip): number {
   return Math.max(0, (trip.legs?.length ?? 1) - 1);
 }
 
+function tripStatusRank(trip: NsTrip): number {
+  if (!trip.status || trip.status === 'NORMAL') return 0;
+  if (trip.status === 'ALTERNATIVE_TRANSPORT') return 1;
+  return 2;
+}
+
 function isViableNsTrip(trip: NsTrip): boolean {
   if (!trip.legs?.length) return false;
   if (trip.cancelled) return false;
-  if (trip.status && trip.status !== 'NORMAL') return false;
+  if (trip.status === 'CANCELLED') return false;
   return trip.legs.every((leg) => !leg.cancelled);
 }
 
@@ -136,6 +198,8 @@ export function selectBestNsTrip(trips: NsTrip[]): NsTrip | null {
   const viable = trips.filter(isViableNsTrip);
   if (!viable.length) return null;
   viable.sort((a, b) => {
+    const status = tripStatusRank(a) - tripStatusRank(b);
+    if (status !== 0) return status;
     const dur = tripDurationMinutes(a) - tripDurationMinutes(b);
     if (dur !== 0) return dur;
     const tr = tripTransfers(a) - tripTransfers(b);
@@ -150,31 +214,24 @@ function stopCode(stop: NsLegStop): string {
 }
 
 function mapTripToPathIds(trip: NsTrip, startId: string, endId: string): string[] | null {
-  const byCode = new Map(STATIONS.map((s) => [s.code.toUpperCase(), s.id]));
-  const bySlug = new Map(STATIONS.map((s) => [slugify(s.name), s.id]));
-  const byName = new Map(STATIONS.map((s) => [s.name.toLowerCase(), s.id]));
-
+  const lookups = buildStationLookups();
   const ids: string[] = [];
+
   for (const leg of trip.legs ?? []) {
     const stops = leg.stops?.length ? leg.stops : [leg.origin, leg.destination].filter(Boolean) as NsLegStop[];
     for (const stop of stops) {
       if (!stop || stop.passing) continue;
-      const code = stopCode(stop);
-      const name = (stop.name ?? stop.mediumName ?? '').trim();
-      const id =
-        (code.length <= 5 ? byCode.get(code.slice(-4)) || byCode.get(code) : undefined) ??
-        bySlug.get(slugify(name)) ??
-        byName.get(name.toLowerCase());
-      if (!id) return null;
+      const name = (stop.name ?? stop.mediumName ?? stop.shortName ?? '').trim();
+      const id = lookupStationId(name, stopCode(stop), lookups);
+      if (!id) continue;
       if (ids[ids.length - 1] !== id) ids.push(id);
     }
   }
 
   if (!ids.length) {
-    const names = extractStopNamesFromTrip(trip);
-    for (const name of names) {
-      const id = bySlug.get(slugify(name)) ?? byName.get(name.toLowerCase());
-      if (!id) return null;
+    for (const name of extractStopNamesFromTrip(trip)) {
+      const id = lookupStationId(name, '', lookups);
+      if (!id) continue;
       if (ids[ids.length - 1] !== id) ids.push(id);
     }
   }
@@ -205,6 +262,7 @@ async function fetchNsTrips(
   for (let attempt = 0; attempt < 2; attempt++) {
     const res = await fetch(`${NS_TRIPS_URL}?${params}`, {
       headers: { 'Ocp-Apim-Subscription-Key': apiKey },
+      signal: AbortSignal.timeout(NS_FETCH_TIMEOUT_MS),
     });
 
     if (res.status === 429) {
@@ -233,11 +291,22 @@ async function fetchNsPath(start: Station, end: Station, dateKey: string): Promi
   const apiKey = getApiKey();
   if (!apiKey) return null;
 
-  const trips = await fetchNsTrips(start.code, end.code, apiKey, dateKeyToPlannerDateTime(dateKey));
-  if (!trips?.length) return null;
-  const trip = selectBestNsTrip(trips);
-  if (!trip) return null;
-  return mapTripToPathIds(trip, start.id, end.id);
+  for (let attempt = 0; attempt < NS_FETCH_RETRIES; attempt++) {
+    const trips = await fetchNsTrips(start.code, end.code, apiKey, dateKeyToPlannerDateTime(dateKey));
+    if (!trips?.length) {
+      if (attempt < NS_FETCH_RETRIES - 1) await sleep(1000 * (attempt + 1));
+      continue;
+    }
+    const trip = selectBestNsTrip(trips);
+    if (!trip) {
+      if (attempt < NS_FETCH_RETRIES - 1) await sleep(1000 * (attempt + 1));
+      continue;
+    }
+    const path = mapTripToPathIds(trip, start.id, end.id);
+    if (path) return path;
+    if (attempt < NS_FETCH_RETRIES - 1) await sleep(1000 * (attempt + 1));
+  }
+  return null;
 }
 
 function graphFallbackPath(startId: string, endId: string): string[] {
@@ -269,9 +338,18 @@ export async function resolveRoutePathForDay(
     return { path, source: 'cache' };
   }
   const task = (async () => {
+    const hasApiKey = !!getApiKey();
     let path = await fetchNsPath(start, end, dateKey);
     let source: CachedRoute['source'] = 'ns';
+
     if (!path) {
+      if (hasApiKey) {
+        console.error(
+          `[Overstaple] NS-route niet beschikbaar voor ${dateKey} (${start.name} → ${end.name}); graaf-fallback uitgeschakeld`,
+        );
+        throw new Error('NS route unavailable');
+      }
+      console.warn(`[Overstaple] Geen NS API-key: graaf-fallback voor ${dateKey}`);
       path = graphFallbackPath(start.id, end.id);
       source = 'graph';
     }
@@ -293,8 +371,12 @@ export async function resolveRoutePathForDay(
   inflight.set(dateKey, task);
   try {
     const path = await task;
-    const source = memoryCache.get(dateKey)?.source ?? 'graph';
+    const cached = memoryCache.get(dateKey);
+    const source = cached?.source === 'ns' ? 'ns' : 'graph';
     return { path, source: source === 'ns' ? 'ns' : 'graph' };
+  } catch (err) {
+    console.warn('[Overstaple] Route ophalen mislukt:', err);
+    throw err;
   } finally {
     inflight.delete(dateKey);
   }
