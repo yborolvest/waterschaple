@@ -668,9 +668,7 @@ function renderHints() {
 
 
 
-  const unlocked =
-
-    state.attempts >= SNELWEGDLE_HINT_ROUTE_AFTER_ATTEMPT && !state.won;
+  const unlocked = state.attempts >= SNELWEGDLE_HINT_ROUTE_AFTER_ATTEMPT;
 
 
 
