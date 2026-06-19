@@ -5,6 +5,7 @@ import { BRAND_ASSETS } from './brand';
 
 export const SITE_NAME = 'Rijkdle';
 export const SITE_URL = 'https://rijkdle.nl';
+export const SITE_TWITTER = '@rijkdle';
 export const SITE_LOCALE = 'nl_NL';
 export const SITE_LANGUAGE = 'nl';
 export const SITE_AUTHOR = 'Your Digital Agency';
