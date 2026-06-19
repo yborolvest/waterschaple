@@ -38,6 +38,22 @@ Als de logs tonen:
 | Alleen `/` 404, logs OK | Proxy wijst niet naar container | Controleer domain + redeploy |
 | `network: …:4321` in logs | Node OK | Fix Coolify network settings |
 
+## Health check (Coolify)
+
+Coolify voert HTTP-checks **in de container** uit en heeft **curl** of **wget** nodig (staat in de Dockerfile).
+
+| Veld | Waarde |
+|------|--------|
+| **Enabled** | Aan |
+| **Port** | `4321` (zelfde als Ports Exposes) |
+| **Path** | `/api/health` of `/health` |
+| **Method** | `GET` |
+| **Response text** | leeg laten, of `ok` bij path `/health` |
+
+De Dockerfile bevat ook een ingebouwde `HEALTHCHECK` op `/api/health`.
+
+**Start period:** zet minstens `60s` — Astro SSR heeft even nodig om op te starten.
+
 ## Health check
 
 - URL: `/api/health`

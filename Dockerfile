@@ -14,6 +14,12 @@ RUN npm run build
 
 FROM node:22-bookworm-slim AS runner
 WORKDIR /app
+
+# NL: Coolify health checks gebruiken curl/wget in de container / EN: Coolify needs curl for HTTP health checks
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends curl \
+  && rm -rf /var/lib/apt/lists/*
+
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=4321
@@ -24,4 +30,8 @@ COPY package.json ./
 COPY scripts/start-production.mjs ./scripts/
 
 EXPOSE 4321
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 \
+  CMD curl -fsS "http://127.0.0.1:${PORT}/api/health" || exit 1
+
 CMD ["node", "./scripts/start-production.mjs"]
