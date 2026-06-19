@@ -6,8 +6,6 @@ import {
   type CookieConsent,
 } from '../lib/cookie-consent';
 
-export const COOKIE_UI_HIDDEN_CLASS = 'cookie-consent-hidden';
-
 function $(id: string): HTMLElement | null {
   return document.getElementById(id);
 }
@@ -19,23 +17,37 @@ export function syncCookieConsentUI(): void {
 
   const consent = getCookieConsent();
   if (consent === 'accepted' || consent === 'rejected') {
-    banner.classList.add(COOKIE_UI_HIDDEN_CLASS);
-    settings.classList.remove(COOKIE_UI_HIDDEN_CLASS);
+    banner.hidden = true;
+    banner.setAttribute('aria-hidden', 'true');
+    settings.hidden = false;
+    settings.setAttribute('aria-hidden', 'false');
     return;
   }
 
-  banner.classList.remove(COOKIE_UI_HIDDEN_CLASS);
-  settings.classList.add(COOKIE_UI_HIDDEN_CLASS);
+  banner.hidden = false;
+  banner.setAttribute('aria-hidden', 'false');
+  settings.hidden = true;
+  settings.setAttribute('aria-hidden', 'true');
 }
 
 function showBanner(): void {
-  $('cookie-banner')?.classList.remove(COOKIE_UI_HIDDEN_CLASS);
-  $('cookie-settings')?.classList.add(COOKIE_UI_HIDDEN_CLASS);
+  const banner = $('cookie-banner');
+  const settings = $('cookie-settings');
+  if (!banner || !settings) return;
+  banner.hidden = false;
+  banner.setAttribute('aria-hidden', 'false');
+  settings.hidden = true;
+  settings.setAttribute('aria-hidden', 'true');
 }
 
 function hideBanner(): void {
-  $('cookie-banner')?.classList.add(COOKIE_UI_HIDDEN_CLASS);
-  $('cookie-settings')?.classList.remove(COOKIE_UI_HIDDEN_CLASS);
+  const banner = $('cookie-banner');
+  const settings = $('cookie-settings');
+  if (!banner || !settings) return;
+  banner.hidden = true;
+  banner.setAttribute('aria-hidden', 'true');
+  settings.hidden = false;
+  settings.setAttribute('aria-hidden', 'false');
 }
 
 function applyConsent(consent: CookieConsent): void {
@@ -54,7 +66,6 @@ export function initCookieConsent(): void {
   const consent = getCookieConsent();
   if (consent === 'accepted') {
     loadUmamiAnalytics();
-    return;
   }
 }
 

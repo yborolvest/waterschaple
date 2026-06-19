@@ -15,6 +15,7 @@ import {
   SITE_TWITTER,
   type OgType,
 } from '../lib/seo';
+import { COOKIE_CONSENT_KEY } from '../lib/cookie-consent';
 
 interface Props {
   title?: string;
@@ -147,5 +148,32 @@ const waveClass =
     <ThemeToggle />
     <slot />
     <CookieBanner />
+    <script is:inline define:vars={{ consentKey: COOKIE_CONSENT_KEY }}>
+      (function () {
+        var banner = document.getElementById('cookie-banner');
+        var settings = document.getElementById('cookie-settings');
+        if (!banner || !settings) return;
+
+        var consent = null;
+        try {
+          consent = localStorage.getItem(consentKey);
+        } catch (error) {
+          consent = null;
+        }
+
+        if (consent === 'accepted' || consent === 'rejected') {
+          banner.hidden = true;
+          banner.setAttribute('aria-hidden', 'true');
+          settings.hidden = false;
+          settings.setAttribute('aria-hidden', 'false');
+          return;
+        }
+
+        banner.hidden = false;
+        banner.setAttribute('aria-hidden', 'false');
+        settings.hidden = true;
+        settings.setAttribute('aria-hidden', 'true');
+      })();
+    </script>
   </body>
 </html>

@@ -1,11 +1,10 @@
 ---
 /** NL: GDPR cookiebanner / EN: GDPR cookie consent banner */
-import { COOKIE_CONSENT_KEY } from '../lib/cookie-consent';
 ---
 
 <div
   id="cookie-banner"
-  class="cookie-banner cookie-consent-hidden"
+  class="cookie-banner"
   role="dialog"
   aria-labelledby="cookie-banner-title"
   aria-describedby="cookie-banner-desc"
@@ -33,169 +32,14 @@ import { COOKIE_CONSENT_KEY } from '../lib/cookie-consent';
 <button
   type="button"
   id="cookie-settings"
-  class="cookie-settings cookie-consent-hidden"
+  class="cookie-settings"
+  hidden
   aria-label="Cookievoorkeuren wijzigen"
 >
   Cookies
 </button>
 
-<script is:inline define:vars={{ consentKey: COOKIE_CONSENT_KEY }}>
-  (function () {
-    var consent = null;
-    try {
-      consent = localStorage.getItem(consentKey);
-    } catch (error) {
-      consent = null;
-    }
-
-    var banner = document.getElementById('cookie-banner');
-    var settings = document.getElementById('cookie-settings');
-    if (!banner || !settings) return;
-
-    if (consent === 'accepted' || consent === 'rejected') {
-      banner.classList.add('cookie-consent-hidden');
-      settings.classList.remove('cookie-consent-hidden');
-      return;
-    }
-
-    banner.classList.remove('cookie-consent-hidden');
-    settings.classList.add('cookie-consent-hidden');
-  })();
-</script>
-
 <script>
   import { initCookieConsentUI } from '../scripts/cookie-consent';
   initCookieConsentUI();
 </script>
-
-<style>
-  .cookie-consent-hidden {
-    display: none !important;
-  }
-
-  .cookie-banner {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 100;
-    padding: 0.75rem 1rem calc(0.75rem + env(safe-area-inset-bottom, 0px));
-    pointer-events: none;
-  }
-
-  .cookie-banner__inner {
-    pointer-events: auto;
-    max-width: 42rem;
-    margin: 0 auto;
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 1rem;
-    padding: 1rem 1.25rem;
-    border-radius: 1rem;
-    border: 1px solid var(--theme-border);
-    background: color-mix(in srgb, var(--theme-bg) 92%, white 8%);
-    backdrop-filter: blur(12px);
-    box-shadow: 0 12px 40px rgb(0 0 0 / 0.2);
-  }
-
-  .cookie-banner__text {
-    flex: 1 1 14rem;
-    min-width: 0;
-  }
-
-  .cookie-banner__title {
-    font-size: 0.875rem;
-    font-weight: 700;
-    color: var(--theme-text);
-    margin: 0 0 0.25rem;
-  }
-
-  .cookie-banner__desc {
-    font-size: 0.75rem;
-    line-height: 1.45;
-    color: var(--theme-muted);
-    margin: 0;
-  }
-
-  .cookie-banner__link {
-    color: var(--theme-text);
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
-
-  .cookie-banner__link:hover {
-    opacity: 0.85;
-  }
-
-  .cookie-banner__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    flex-shrink: 0;
-  }
-
-  .cookie-banner__btn {
-    font-size: 0.8125rem;
-    font-weight: 600;
-    padding: 0.5rem 1rem;
-    border-radius: 0.625rem;
-    border: 1px solid transparent;
-    cursor: pointer;
-    transition: background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
-  }
-
-  .cookie-banner__btn--primary {
-    background: #007bc7;
-    color: #fff;
-    border-color: #007bc7;
-  }
-
-  .cookie-banner__btn--primary:hover {
-    background: #006aad;
-  }
-
-  .cookie-banner__btn--ghost {
-    background: var(--theme-surface);
-    color: var(--theme-text);
-    border-color: var(--theme-border);
-  }
-
-  .cookie-banner__btn--ghost:hover {
-    background: var(--theme-surface-hover);
-  }
-
-  .cookie-settings {
-    position: fixed;
-    left: 1rem;
-    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
-    z-index: 100;
-    font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    padding: 0.4rem 0.65rem;
-    border-radius: 9999px;
-    border: 1px solid var(--theme-border);
-    background: color-mix(in srgb, var(--theme-bg) 88%, white 12%);
-    color: var(--theme-muted);
-    backdrop-filter: blur(8px);
-    cursor: pointer;
-    transition: color 0.2s ease, background-color 0.2s ease;
-    box-shadow: 0 4px 16px rgb(0 0 0 / 0.12);
-  }
-
-  .cookie-settings:hover {
-    color: var(--theme-text);
-    background: var(--theme-surface-hover);
-  }
-
-  @media (max-width: 480px) {
-    .cookie-banner__actions {
-      width: 100%;
-    }
-
-    .cookie-banner__btn {
-      flex: 1 1 auto;
-    }
-  }
-</style>
