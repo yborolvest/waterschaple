@@ -1,6 +1,6 @@
 import { findStationById, type Station } from '../../data/stations';
 import { OVERSTAPLE_PUZZLES, STATION_NEIGHBORS } from '../../data/station-connections';
-import { getDayIndex, getDayIndexFromKey, getYesterdayDateKey } from '../game-logic';
+import { getDayIndex, getDayIndexFromKey, getYesterdayDateKey, getDailyListIndex } from '../game-logic';
 import { bfsDistances, findShortestPathIds, pathToDailyPuzzleFields } from './pathfinding';
 import type { GuessQuality } from './types';
 
@@ -19,7 +19,7 @@ export interface DailyPuzzle extends PuzzlePair {
 function getPuzzleDefForDayIndex(dayIndex: number) {
   const len = OVERSTAPLE_PUZZLES.length;
   if (!len) return null;
-  let idx = ((dayIndex % len) + len) % len;
+  let idx = getDailyListIndex(dayIndex, len, 'overstaple');
   let def = OVERSTAPLE_PUZZLES[idx];
   for (let i = 0; i < len && !def; i++) {
     idx = (idx + 1) % len;

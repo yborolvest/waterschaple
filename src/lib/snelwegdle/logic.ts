@@ -1,6 +1,6 @@
 import { SNELWEGEN, type Snelweg } from '../../data/snelwegen';
 
-import { getDayIndex, getDayIndexFromKey, getYesterdayDateKey } from '../game-logic';
+import { getDayIndex, getDayIndexFromKey, getYesterdayDateKey, getDailyListIndex } from '../game-logic';
 
 
 
@@ -8,7 +8,7 @@ export function getSnelwegDailyTarget(date = new Date()): Snelweg {
 
   const dayIndex = getDayIndex(date);
 
-  const index = ((dayIndex % SNELWEGEN.length) + SNELWEGEN.length) % SNELWEGEN.length;
+  const index = getDailyListIndex(dayIndex, SNELWEGEN.length, 'snelwegdle');
 
   return SNELWEGEN[index];
 
@@ -20,7 +20,7 @@ export function getSnelwegDailyTargetFromKey(dateKey: string): Snelweg {
 
   const dayIndex = getDayIndexFromKey(dateKey);
 
-  const index = ((dayIndex % SNELWEGEN.length) + SNELWEGEN.length) % SNELWEGEN.length;
+  const index = getDailyListIndex(dayIndex, SNELWEGEN.length, 'snelwegdle');
 
   return SNELWEGEN[index];
 

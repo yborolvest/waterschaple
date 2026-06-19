@@ -1,15 +1,15 @@
 import { WATERSCHAPPEN, type Waterschap } from '../../data/waterschappen';
-import { getDayIndex, getDayIndexFromKey, getYesterdayDateKey } from '../game-logic';
+import { getDayIndex, getDayIndexFromKey, getYesterdayDateKey, getDailyListIndex } from '../game-logic';
 
 export function getWaterschapDailyTarget(date = new Date()): Waterschap {
   const dayIndex = getDayIndex(date);
-  const index = ((dayIndex % WATERSCHAPPEN.length) + WATERSCHAPPEN.length) % WATERSCHAPPEN.length;
+  const index = getDailyListIndex(dayIndex, WATERSCHAPPEN.length, 'waterschaple');
   return WATERSCHAPPEN[index];
 }
 
 export function getWaterschapDailyTargetFromKey(dateKey: string): Waterschap {
   const dayIndex = getDayIndexFromKey(dateKey);
-  const index = ((dayIndex % WATERSCHAPPEN.length) + WATERSCHAPPEN.length) % WATERSCHAPPEN.length;
+  const index = getDailyListIndex(dayIndex, WATERSCHAPPEN.length, 'waterschaple');
   return WATERSCHAPPEN[index];
 }
 

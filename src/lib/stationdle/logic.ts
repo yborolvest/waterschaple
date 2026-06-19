@@ -4,17 +4,18 @@ import {
   getDayIndex,
   getDayIndexFromKey,
   getYesterdayDateKey,
+  getDailyListIndex,
 } from '../game-logic';
 
 export function getStationDailyTarget(date = new Date()): Station {
   const dayIndex = getDayIndex(date);
-  const index = ((dayIndex % STATIONS.length) + STATIONS.length) % STATIONS.length;
+  const index = getDailyListIndex(dayIndex, STATIONS.length, 'stationdle');
   return STATIONS[index];
 }
 
 export function getStationDailyTargetFromKey(dateKey: string): Station {
   const dayIndex = getDayIndexFromKey(dateKey);
-  const index = ((dayIndex % STATIONS.length) + STATIONS.length) % STATIONS.length;
+  const index = getDailyListIndex(dayIndex, STATIONS.length, 'stationdle');
   return STATIONS[index];
 }
 
