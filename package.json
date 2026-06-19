@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "start": "HOST=0.0.0.0 node ./dist/server/entry.mjs",
+    "start": "node ./scripts/start-production.mjs",
     "preview": "astro preview",
     "generate:gemeenten": "node scripts/generate-gemeenten.mjs",
     "generate:stations": "node scripts/generate-stations.mjs",

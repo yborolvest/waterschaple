@@ -1,18 +1,21 @@
 # NL: Nixpacks-build (Coolify, Railway, etc.) / EN: Nixpacks deploy configuration
 # https://nixpacks.com/docs/configuration/file
 
+# Alleen Node — voorkomt dat Vite/Astro Caddy/Nginx static serving activeert
+providers = ["node"]
+
 [variables]
 HOST = "0.0.0.0"
+PORT = "4321"
 
 [phases.setup]
 nixPkgs = ["nodejs_22"]
 
 [phases.install]
 cmds = ["npm ci"]
-# NODE_ENV=production hier weglaten — anders worden devDependencies niet geïnstalleerd voor de build
 
 [phases.build]
 cmds = ["NODE_ENV=production npm run build"]
 
 [start]
-cmd = "HOST=0.0.0.0 npm run start"
+cmd = "node ./scripts/start-production.mjs"

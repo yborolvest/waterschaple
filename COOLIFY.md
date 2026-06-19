@@ -1,41 +1,69 @@
 # Coolify deploy / NL-EN
 
-## Snelle checklist
+## Belangrijk: je app draait al
 
-1. **Build pack:** Nixpacks (niet Dockerfile, tenzij je die zelf beheert)
-2. **Is it a static site?** → **UIT** (SSR, geen static hosting)
-3. **Ports Exposes:** `4321` (moet overeenkomen met waar de app luistert)
-4. **Start command:** leeg laten (gebruikt `npm run start` uit `nixpacks.toml`)  
-   of expliciet: `HOST=0.0.0.0 node ./dist/server/entry.mjs`
-5. **Redeploy** na config-wijzigingen (Coolify slaat niet altijd automatisch op)
+Als de logs tonen:
 
-## Veelvoorkomende 404
+```
+[@astrojs/node] Server listening on
+  network: http://172.x.x.x:4321
+```
 
-| Oorzaak | Oplossing |
-|---------|-----------|
-| Static site aan | Zet **Is it a static site?** uit — anders serveert Nginx alleen `dist/` als static files |
-| Verkeerde poort | Zet **Ports Exposes** op `4321` |
-| App op localhost | Gebruik `server.host: true` in `astro.config.mjs` + `HOST=0.0.0.0` bij start (staat in repo) |
-| Oude image | Force redeploy na wijzigingen |
+…dan start Node goed. Een **404 komt dan bijna altijd van de proxy** (verkeerde poort of static/Nginx-modus), niet van Astro.
 
-## Omgevingsvariabelen (optioneel)
+## Stappen (Nixpacks)
+
+1. **Is it a static site?** → **UIT** (geen publish directory invullen)
+2. **Is it a SPA?** → **UIT**
+3. **Ports Exposes** → `4321` (exact hetzelfde als in de logs)
+4. **Build Pack** → Nixpacks
+5. **Start command** → leeg laten (`node ./scripts/start-production.mjs` via `nixpacks.toml`)
+6. **Save** en **Redeploy** (Coolify slaat niet altijd automatisch op)
+
+`nixpacks.toml` bevat `providers = ["node"]` zodat Nixpacks **geen** Caddy/Nginx voor Vite/Astro toevoegt.
+
+## Alternatief: Dockerfile (aanbevolen bij aanhoudende 404)
+
+1. **Build Pack** → **Dockerfile**
+2. **Ports Exposes** → `4321`
+3. Static site → **UIT**
+4. Redeploy
+
+## Diagnose 404
+
+| Symptoom | Oorzaak | Oplossing |
+|----------|---------|-----------|
+| Response header `nginx` | Static site modus | Static + SPA uit |
+| App op `4321`, Coolify op `3000`/`80` | Poort mismatch | Zet **Ports Exposes** op `4321` |
+| Alleen `/` 404, logs OK | Proxy wijst niet naar container | Controleer domain + redeploy |
+| `network: …:4321` in logs | Node OK | Fix Coolify network settings |
+
+## Health check
+
+- URL: `/api/health`
+- Verwacht: `{"ok":true}`
+
+Test **binnen het Coolify-netwerk** of via het publieke domein na deploy.
+
+## Omgevingsvariabelen
 
 | Variabele | Doel |
 |-----------|------|
-| `UPSTASH_REDIS_REST_URL` | Globale solve-teller (productie) |
+| `PORT` | Moet gelijk zijn aan **Ports Exposes** (default `4321`) |
+| `HOST` | `0.0.0.0` (staat in `nixpacks.toml` / Dockerfile) |
+| `UPSTASH_REDIS_REST_URL` | Solve-teller (productie) |
 | `UPSTASH_REDIS_REST_TOKEN` | Upstash token |
 | `NS_API_SUBSCRIPTION_KEY` | Overstaple NS-routes |
-| `PORT` | Wordt door Coolify gezet; fallback `4321` |
 
-## Logs controleren
-
-In Coolify → **Logs**: na start zou je iets moeten zien als:
+## Logs na deploy
 
 ```
-Server listening on http://0.0.0.0:4321
+[rijkdle] Starting SSR server on 0.0.0.0:4321
+[@astrojs/node] Server listening on
+  network: http://172.x.x.x:4321
 ```
 
-Als je `localhost` ziet, bereikt de proxy de container niet.
+Als `PORT` in de eerste regel niet overeenkomt met **Ports Exposes**, pas Coolify aan.
 
 ---
 
