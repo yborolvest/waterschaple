@@ -2,7 +2,6 @@
 # https://nixpacks.com/docs/configuration/file
 
 [variables]
-NODE_ENV = "production"
 HOST = "0.0.0.0"
 
 [phases.setup]
@@ -10,9 +9,10 @@ nixPkgs = ["nodejs_22"]
 
 [phases.install]
 cmds = ["npm ci"]
+# NODE_ENV=production hier weglaten — anders worden devDependencies niet geïnstalleerd voor de build
 
 [phases.build]
-cmds = ["npm run build"]
+cmds = ["NODE_ENV=production npm run build"]
 
 [start]
-cmd = "npm run start"
+cmd = "HOST=0.0.0.0 npm run start"
