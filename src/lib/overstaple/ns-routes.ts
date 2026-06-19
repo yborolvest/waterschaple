@@ -106,9 +106,16 @@ function lookupStationId(
         : lookups.byCode.get(normalizedCode);
     if (fromCode) return fromCode;
   }
-  for (const variant of nsNameVariants(name)) {
-    const id = lookups.bySlug.get(slugify(variant)) ?? lookups.byName.get(variant);
-    if (id) return id;
+
+  const candidates = [name.trim()];
+  const commaIdx = name.indexOf(',');
+  if (commaIdx > 0) candidates.push(name.slice(0, commaIdx).trim());
+
+  for (const candidate of candidates) {
+    for (const variant of nsNameVariants(candidate)) {
+      const id = lookups.bySlug.get(slugify(variant)) ?? lookups.byName.get(variant);
+      if (id) return id;
+    }
   }
   return undefined;
 }
@@ -195,8 +202,13 @@ function isViableNsTrip(trip: NsTrip): boolean {
 }
 
 export function selectBestNsTrip(trips: NsTrip[]): NsTrip | null {
+  const ranked = rankNsTrips(trips);
+  return ranked[0] ?? null;
+}
+
+/** NL: Alle bruikbare trips, gesorteerd op route-prioriteit / EN: All viable trips ranked by route priority */
+export function rankNsTrips(trips: NsTrip[]): NsTrip[] {
   const viable = trips.filter(isViableNsTrip);
-  if (!viable.length) return null;
   viable.sort((a, b) => {
     const status = tripStatusRank(a) - tripStatusRank(b);
     if (status !== 0) return status;
@@ -206,7 +218,7 @@ export function selectBestNsTrip(trips: NsTrip[]): NsTrip | null {
     if (tr !== 0) return tr;
     return extractStopNamesFromTrip(a).length - extractStopNamesFromTrip(b).length;
   });
-  return viable[0];
+  return viable;
 }
 
 function stopCode(stop: NsLegStop): string {
@@ -297,13 +309,12 @@ async function fetchNsPath(start: Station, end: Station, dateKey: string): Promi
       if (attempt < NS_FETCH_RETRIES - 1) await sleep(1000 * (attempt + 1));
       continue;
     }
-    const trip = selectBestNsTrip(trips);
-    if (!trip) {
-      if (attempt < NS_FETCH_RETRIES - 1) await sleep(1000 * (attempt + 1));
-      continue;
+
+    for (const trip of rankNsTrips(trips)) {
+      const path = mapTripToPathIds(trip, start.id, end.id);
+      if (path) return path;
     }
-    const path = mapTripToPathIds(trip, start.id, end.id);
-    if (path) return path;
+
     if (attempt < NS_FETCH_RETRIES - 1) await sleep(1000 * (attempt + 1));
   }
   return null;
