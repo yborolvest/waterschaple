@@ -78,7 +78,7 @@ export function distanceToProximity(distanceKm: number): number {
   return Math.max(0, Math.min(100, score));
 }
 
-/** Doelgemeente voor een datum — alleen server-side gebruiken */
+/** Doelgemeente voor een datum: alleen server-side gebruiken */
 export function getDailyTarget(date = new Date()): Gemeente {
   const dayIndex = getDayIndex(date);
   const index = ((dayIndex % GEMEENTEN.length) + GEMEENTEN.length) % GEMEENTEN.length;
@@ -142,7 +142,7 @@ export function validateTodayPuzzle(puzzleNumber: number, dateKey: string): bool
   return dateKey === todayKey && puzzleNumber === getPuzzleNumber();
 }
 
-/** Server-side guess evaluation — coördinaten blijven op de server */
+/** Server-side guess evaluation: coördinaten blijven op de server */
 export function evaluateGuess(guess: Gemeente, target: Gemeente) {
   const distance = haversineDistance(guess.lat, guess.lng, target.lat, target.lng);
   const bearing = calculateBearing(guess.lat, guess.lng, target.lat, target.lng);

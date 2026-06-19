@@ -2,7 +2,7 @@
 
 ## Symptoom: 404 page not found (19 bytes)
 
-Dit is **Traefik** op je Coolify-server — niet Astro. De app draait in de container, maar Traefik heeft **geen route** naar `rijkdle.nl`.
+Dit is **Traefik** op je Coolify-server, niet Astro. De app draait in de container, maar Traefik heeft **geen route** naar `rijkdle.nl`.
 
 Cloudflare (oranje wolk) is OK; DNS wijst naar Cloudflare → origin → Traefik.
 
@@ -24,7 +24,7 @@ Dockerfile- en Nixpacks-deploys missen soms het Traefik `loadbalancer.server.por
    ```
    https://rijkdle.nl:3000
    ```
-   De `:3000` is verplicht — Coolify zet daarmee de Traefik backend-poort.
+   De `:3000` is verplicht, Coolify zet daarmee de Traefik backend-poort.
 8. **Ports Exposes** → `3000`
 9. **Health check** → port `3000`, path `/api/health`
 10. **Save** → **Redeploy**
@@ -66,7 +66,7 @@ Alleen als Docker Compose niet kan:
 |------------|---------|
 | SSL/TLS mode → **Full** of **Full (strict)** | HTTPS aan op domein |
 
-**Niet** "Flexible" — dat breekt HTTPS naar Traefik.
+**Niet** "Flexible": dat breekt HTTPS naar Traefik.
 
 ---
 

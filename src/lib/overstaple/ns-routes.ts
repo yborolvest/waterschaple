@@ -224,7 +224,7 @@ async function fetchNsTrips(
     return data.trips ?? [];
   }
 
-  console.warn('[Overstaple] NS trips: rate limit — graaf-fallback (1 uur pauze)');
+  console.warn('[Overstaple] NS trips: rate limit, graaf-fallback (1 uur pauze)');
   nsCooldownUntil = Date.now() + NS_COOLDOWN_MS;
   return null;
 }
@@ -245,8 +245,8 @@ function graphFallbackPath(startId: string, endId: string): string[] {
 }
 
 /**
- * NL: Route van vandaag — 1× NS API per dag, daarna cache.
- * EN: Today's route — one NS call per day, then cached.
+ * NL: Route van vandaag: 1× NS API per dag, daarna cache.
+ * EN: Today's route: one NS call per day, then cached.
  */
 export async function resolveRoutePathForDay(
   dateKey: string,

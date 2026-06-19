@@ -164,7 +164,7 @@ async function main() {
     })
     .join('\n');
 
-  const content = `/** AUTO-GENERATED — npm run generate:snelweg-geometries */
+  const content = `/** AUTO-GENERATED: npm run generate:snelweg-geometries */
 /** NL: Vereenvoudigde routecoördinaten [lat, lng] per snelweg (bron: OpenStreetMap) */
 /** EN: Simplified route coordinates per motorway from OSM Overpass */
 

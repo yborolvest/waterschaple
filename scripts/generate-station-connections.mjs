@@ -148,7 +148,7 @@ function bfsDistances(graph, start) {
   return dist;
 }
 
-/** Eén kortste pad — min. tussenstops, deterministische tie-break */
+/** Eén kortste pad: min. tussenstops, deterministische tie-break */
 function findShortestPathIds(graph, start, end) {
   const parent = new Map([[start, null]]);
   const queue = [start];
@@ -241,7 +241,7 @@ const file = `/**
  */
 
 /**
- * NL: Buren via alle treintypes — scoring gebruikt het opgeslagen NS/graaf-pad.
+ * NL: Buren via alle treintypes: scoring gebruikt het opgeslagen NS/graaf-pad.
  * EN: Neighbors via all scheduled train services.
  */
 export const STATION_NEIGHBORS: Record<string, string[]> = ${JSON.stringify(fullGraph, null, 2)};

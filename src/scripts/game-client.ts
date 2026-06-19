@@ -129,12 +129,12 @@ function renderGlobalSolveCount(count: number | null, status: 'ok' | 'loading' |
   }
   if (status === 'test') {
     bannerText.textContent = 'Community-teller uitgeschakeld (testmodus)';
-    if (statEl) statEl.textContent = '—';
+    if (statEl) statEl.textContent = '…';
     return;
   }
   if (status === 'error' || count === null) {
     bannerText.textContent = 'Community-teller tijdelijk niet beschikbaar';
-    if (statEl) statEl.textContent = '—';
+    if (statEl) statEl.textContent = '…';
     return;
   }
 
@@ -456,7 +456,7 @@ async function endGame() {
     $('#result-title')!.textContent = 'Volgende keer beter!';
     $('#result-message')!.textContent = 'Je pogingen zijn op. De juiste gemeente was:';
     $('#result-answer')!.classList.remove('hidden');
-    $('#result-answer-name')!.textContent = state.targetName ?? '—';
+    $('#result-answer-name')!.textContent = state.targetName ?? '…';
     $('#result-answer-province')!.textContent = state.targetProvince ?? '';
   }
 

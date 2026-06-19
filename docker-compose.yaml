@@ -1,4 +1,4 @@
-# NL: Aanbevolen Coolify-deploy — expliciete Traefik-poort / EN: Recommended Coolify deploy with explicit Traefik port
+# NL: Aanbevolen Coolify-deploy: expliciete Traefik-poort / EN: Recommended Coolify deploy with explicit Traefik port
 # Build pack in Coolify: Docker Compose (niet alleen Dockerfile)
 # Domein in Coolify: https://rijkdle.nl:3000
 

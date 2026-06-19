@@ -1,5 +1,5 @@
 /**
- * Nederlandse gemeenten — dataset voor Gemeentedle
+ * Nederlandse gemeenten: dataset voor Gemeentedle
  * NL: 345 gemeenten (342 EU + 3 Caribisch Nederland), bron: Wikipedia + PDOK/handmatig.
  * EN: Dutch municipalities incl. Caribbean special municipalities (BES islands).
  * @see https://nl.wikipedia.org/wiki/Lijst_van_Nederlandse_gemeenten_per_provincie

@@ -6,7 +6,7 @@
  */
 
 /**
- * NL: Buren via alle treintypes — scoring gebruikt het opgeslagen NS/graaf-pad.
+ * NL: Buren via alle treintypes: scoring gebruikt het opgeslagen NS/graaf-pad.
  * EN: Neighbors via all scheduled train services.
  */
 export const STATION_NEIGHBORS: Record<string, string[]> = {
@@ -5623,7 +5623,7 @@ export const STATION_NEIGHBORS_LOCAL: Record<string, string[]> = {
 export interface OverstaplePuzzleDef {
   start: string;
   end: string;
-  /** Tussenstations op het pad (excl. start/eind) — bron: NS reisplanner */
+  /** Tussenstations op het pad (excl. start/eind): bron: NS reisplanner */
   intermediate: string[];
   /** Geordend pad incl. start/eind (alle haltes) */
   path: string[];

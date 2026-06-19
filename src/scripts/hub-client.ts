@@ -89,7 +89,7 @@ function updateGameCard(gameId: string, status: GameStatus, accentClasses: strin
 
   const game = DAILY_GAMES.find((g) => g.id === gameId);
   if (game) {
-    card.setAttribute('aria-label', `${game.name} — ${copy.ariaSuffix}`);
+    card.setAttribute('aria-label', `${game.name}, ${copy.ariaSuffix}`);
   }
 }
 

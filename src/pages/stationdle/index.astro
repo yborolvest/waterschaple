@@ -43,7 +43,7 @@ import StationdleGameLoop from '../../components/StationdleGameLoop.astro';
       >
         <span aria-hidden="true">📅</span>
         Gisteren
-        <span class="text-white/60">(Puzzel #<span id="yesterday-puzzle-number">—</span>)</span>:
+        <span class="text-white/60">(Puzzel #<span id="yesterday-puzzle-number">…</span>)</span>:
         <strong id="yesterday-station-name" class="text-rail-light font-semibold">…</strong>
         <span id="yesterday-station-province" class="text-white/60"></span>
       </div>
@@ -86,7 +86,7 @@ import StationdleGameLoop from '../../components/StationdleGameLoop.astro';
   <StationdleGameLoop />
 
   <footer class="relative z-10 px-4 py-4 border-t border-white/10 text-center text-white/60 text-xs">
-    <p>Stationdle &mdash; Raad het treinstation van vandaag</p>
+    <p>Stationdle · Raad het treinstation van vandaag</p>
     <p class="mt-1"><a href="/" class="hover:text-white/60 transition-colors">Alle spellen</a> · Your Digital Agency</p>
   </footer>
 
@@ -120,7 +120,7 @@ import StationdleGameLoop from '../../components/StationdleGameLoop.astro';
         <div id="guess-distribution" class="space-y-2 mb-6"></div>
         <div class="mb-6 p-4 rounded-xl bg-rail-accent/10 border border-rail-accent/20 text-center">
           <p class="text-xs uppercase tracking-widest text-gray-500 mb-1">Community vandaag</p>
-          <p class="text-2xl font-bold text-rose-700" id="stat-global-solves">—</p>
+          <p class="text-2xl font-bold text-rose-700" id="stat-global-solves">…</p>
           <p class="text-xs text-gray-500 mt-1">keer opgelost door spelers</p>
         </div>
         <h3 class="text-sm font-semibold text-gray-700 mb-3">Recente scores</h3>
@@ -141,7 +141,7 @@ import StationdleGameLoop from '../../components/StationdleGameLoop.astro';
           <button data-close="info" class="text-gray-400 hover:text-gray-600 text-2xl leading-none" aria-label="Sluiten">&times;</button>
         </div>
         <ul class="space-y-3 text-sm text-gray-700 leading-relaxed">
-          <li>🎯 Elke dag is er <strong>één treinstation</strong> het doelwit &mdash; voor <strong>alle spelers wereldwijd hetzelfde</strong>.</li>
+          <li>🎯 Elke dag is er <strong>één treinstation</strong> het doelwit, voor <strong>alle spelers wereldwijd hetzelfde</strong>.</li>
           <li>📅 Het antwoord van <strong>gisteren</strong> staat altijd bovenaan het scherm.</li>
           <li>🔄 Je hebt <strong>6 pogingen</strong> om het juiste station te vinden.</li>
           <li>📍 Na elke gok zie je de <strong>afstand in km</strong>, een <strong>pijl</strong> richting het doel, en een <strong>nabijheidsscore</strong> (0&ndash;100%).</li>

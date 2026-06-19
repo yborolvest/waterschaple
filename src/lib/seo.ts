@@ -11,13 +11,13 @@ export const SITE_LANGUAGE = 'nl';
 export const SITE_AUTHOR = 'Your Digital Agency';
 
 export const DEFAULT_DESCRIPTION =
-  'Speel dagelijkse Nederlandse geo-raadspellen op Rijkdle — Gemeentedle, Waterschaple, Snelwegdle, Stationdle en Overstaple.';
+  'Speel dagelijkse Nederlandse geo-raadspellen op Rijkdle: Gemeentedle, Waterschaple, Snelwegdle, Stationdle en Overstaple.';
 
 export const DEFAULT_OG_IMAGE = {
   url: '/logo@2x.png',
   width: BRAND_ASSETS.logo.light.width,
   height: BRAND_ASSETS.logo.light.height,
-  alt: 'Rijkdle — dagelijkse Nederlandse geo-raadspellen',
+  alt: 'Rijkdle: dagelijkse Nederlandse geo-raadspellen',
 } as const;
 
 export const SITEMAP_PATHS = [
@@ -130,13 +130,13 @@ export function gamePageSeo(gameId: string): Pick<PageSeo, 'title' | 'descriptio
 
   const descriptions: Record<string, string> = {
     gemeentedle:
-      'Raad de Nederlandse gemeente van vandaag in 10 pogingen. Dagelijks nieuw puzzel, hints via afstand en provincie — het Nederlandse geo-raadspel op Rijkdle.',
+      'Raad de Nederlandse gemeente van vandaag in 10 pogingen. Dagelijks nieuw puzzel, hints via afstand en provincie, het Nederlandse geo-raadspel op Rijkdle.',
     waterschaple:
-      'Raad het Nederlandse waterschap van vandaag. Dagelijks hetzelfde doelwit voor iedereen — test je kennis van waterschappen op Rijkdle.',
+      'Raad het Nederlandse waterschap van vandaag. Dagelijks hetzelfde doelwit voor iedereen, test je kennis van waterschappen op Rijkdle.',
     snelwegdle:
-      'Raad de Nederlandse rijksautosnelweg van vandaag. Van A1 tot A76 — het dagelijkse snelweg-raadspel op Rijkdle.',
+      'Raad de Nederlandse rijksautosnelweg van vandaag. Van A1 tot A76: het dagelijkse snelweg-raadspel op Rijkdle.',
     stationdle:
-      'Raad het Nederlandse treinstation van vandaag. Dagelijks puzzel met hints — voor treinliefhebbers op Rijkdle.',
+      'Raad het Nederlandse treinstation van vandaag. Dagelijks puzzel met hints, voor treinliefhebbers op Rijkdle.',
     overstaple:
       'Reis van station naar station en raad alle tussenstations op het kortste treinpad. Het dagelijkse NS-raadspel op Rijkdle.',
   };

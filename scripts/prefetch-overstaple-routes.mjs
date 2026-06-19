@@ -37,4 +37,4 @@ for (const row of results) {
   console.log(`${row.dateKey}: ${label} (${row.hops} hops, bron: ${row.source})`);
 }
 
-console.log(`\nKlaar — ${results.length} route(s) gecached (vandaag + ${ROUTE_PREFETCH_DAYS - 1} dag(en) vooruit).`);
+console.log(`\nKlaar, ${results.length} route(s) gecached (vandaag + ${ROUTE_PREFETCH_DAYS - 1} dag(en) vooruit).`);

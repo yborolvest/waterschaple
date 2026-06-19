@@ -1,5 +1,5 @@
 /**
- * Nederland — provinciegrenzen (CBS 2020, gesimplificeerd)
+ * Nederland: provinciegrenzen (CBS 2020, gesimplificeerd)
  * NL: gegenereerd uit cartomap/PDOK WGS84-data.
  * EN: Dutch province boundaries for map backgrounds.
  * @generated scripts/generate-nl-map.mjs

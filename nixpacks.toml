@@ -1,7 +1,7 @@
 # NL: Nixpacks-build (Coolify, Railway, etc.) / EN: Nixpacks deploy configuration
 # https://nixpacks.com/docs/configuration/file
 
-# Alleen Node — voorkomt dat Vite/Astro Caddy/Nginx static serving activeert
+# Alleen Node: voorkomt dat Vite/Astro Caddy/Nginx static serving activeert
 providers = ["node"]
 
 [variables]

@@ -1,4 +1,4 @@
-# Waterschaple — Project Context
+# Waterschaple: Project Context
 
 > **NL:** Contextbestand voor ontwikkelaars en AI-assistenten.  
 > **EN:** Context file for developers and AI assistants working on this codebase.
@@ -24,7 +24,7 @@
 
 ## Core product rules / Spelregels
 
-1. **One global target per calendar day** — same waterschap for all players worldwide (`getDailyTarget()`).
+1. **One global target per calendar day**, same waterschap for all players worldwide (`getDailyTarget()`).
 2. **Yesterday's answer is always visible** in the header (`getYesterdayTarget()`).
 3. **6 attempts** per day; autocomplete from valid waterschappen only.
 4. **Win** = exact waterschap match (100% proximity).
@@ -55,10 +55,10 @@ src/
 └── styles/global.css        # Tailwind + custom animations
 ```
 
-- **Hybrid Astro** — static UI + server API routes (`output: 'hybrid'`, `@astrojs/node`).
-- **Community counter** — server-side store; Upstash Redis in production, `.data/solves.json` locally.
-- **Client state** — `localStorage` key: `waterschaple_stats_v1`.
-- **Legacy** — `legacy-index.html` is the original single-file prototype (reference only).
+- **Hybrid Astro**, static UI + server API routes (`output: 'hybrid'`, `@astrojs/node`).
+- **Community counter**, server-side store; Upstash Redis in production, `.data/solves.json` locally.
+- **Client state**, `localStorage` key: `waterschaple_stats_v1`.
+- **Legacy**, `legacy-index.html` is the original single-file prototype (reference only).
 
 ---
 
@@ -83,7 +83,7 @@ src/
 ## Daily puzzle algorithm
 
 - **Epoch:** `2024-01-01` (`EPOCH_DATE` in `config.ts`)
-- **Timezone:** `Europe/Amsterdam` (`GAME_TIMEZONE`) — global same puzzle for all players
+- **Timezone:** `Europe/Amsterdam` (`GAME_TIMEZONE`), global same puzzle for all players
 - **Puzzle number:** days since epoch + 1
 - **Target index:** `dayIndex % 20` into `WATERSCHAPPEN` array
 - **Date key:** `YYYY-MM-DD` in Amsterdam timezone
@@ -171,10 +171,10 @@ npm run preview
 
 ## Conventions for contributors
 
-1. **Minimize scope** — focused diffs; match existing patterns.
-2. **Comments** — brief; NL or bilingual where business logic is non-obvious.
-3. **Documentation** — update this file and `README.md` for structural or rule changes.
-4. **No secrets** in repo — CountAPI uses public keys only.
+1. **Minimize scope**, focused diffs; match existing patterns.
+2. **Comments**, brief; NL or bilingual where business logic is non-obvious.
+3. **Documentation**, update this file and `README.md` for structural or rule changes.
+4. **No secrets** in repo, CountAPI uses public keys only.
 5. **Client logic** stays in `src/lib/` + `src/scripts/`; markup in `.astro` files.
 6. **Do not commit** unless explicitly requested.
 
@@ -204,4 +204,4 @@ npm run preview
 
 ---
 
-*Last updated: June 2026 — Astro migration, global daily puzzle, yesterday reveal, streak & community counter.*
+*Last updated: June 2026: Astro migration, global daily puzzle, yesterday reveal, streak & community counter.*

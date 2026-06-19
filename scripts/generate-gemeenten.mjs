@@ -365,7 +365,7 @@ const RAW = [
 ];
 
 /**
- * Bijzondere gemeenten (openbare lichamen) — Caribisch Nederland
+ * Bijzondere gemeenten (openbare lichamen): Caribisch Nederland
  * @see https://nl.wikipedia.org/wiki/Caribisch_Nederland
  * Coördinaten: gemeentelijke centroiden (PDOK dekt CN niet; handmatig)
  */
@@ -457,7 +457,7 @@ for (const row of CARIBISCH_RAW) {
 gemeenten.sort((a, b) => a.name.localeCompare(b.name, 'nl'));
 
 const file = `/**
- * Nederlandse gemeenten — dataset voor Gemeentedle
+ * Nederlandse gemeenten: dataset voor Gemeentedle
  * NL: ${gemeenten.length} gemeenten (342 EU + 3 Caribisch Nederland), bron: Wikipedia + PDOK/handmatig.
  * EN: Dutch municipalities incl. Caribbean special municipalities (BES islands).
  * @see https://nl.wikipedia.org/wiki/Lijst_van_Nederlandse_gemeenten_per_provincie

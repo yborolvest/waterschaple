@@ -253,7 +253,7 @@ if (nsKey) {
   }
 } else {
   process.stdout.write(
-    'Waarschuwing: NS_API_SUBSCRIPTION_KEY ontbreekt — fallback naar ProRail PDOK.\n',
+    'Waarschuwing: NS_API_SUBSCRIPTION_KEY ontbreekt, fallback naar ProRail PDOK.\n',
   );
   const features = await fetchProRailStations();
   for (const f of features) {
@@ -287,7 +287,7 @@ if (unknownTraject.length) {
 
 const stationSource = nsKey ? 'NS Reisinformatie API' : 'ProRail (PDOK)';
 const file = `/**
- * Nederlandse treinstations — dataset voor Stationdle & Overstaple
+ * Nederlandse treinstations: dataset voor Stationdle & Overstaple
  * NL: ${stations.length} stations, bron: ${stationSource} + trajecten Rijden de Treinen.
  * EN: Dutch railway stations with province and passenger route hints.
  * @see https://apiportal.ns.nl/

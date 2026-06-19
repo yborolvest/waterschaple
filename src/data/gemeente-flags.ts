@@ -1,6 +1,6 @@
 /**
  * Gemeentevlag-URL's voor hints (Wikidata P41 / Wikipedia fallback)
- * NL: Automatisch gegenereerd — niet handmatig bewerken.
+ * NL: Automatisch gegenereerd: niet handmatig bewerken.
  * EN: Auto-generated flag image URLs keyed by gemeente id.
  * Run: npm run fetch:flags
  */

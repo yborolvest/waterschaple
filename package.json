@@ -2,7 +2,7 @@
   "name": "gemeentedle",
   "type": "module",
   "version": "1.0.0",
-  "description": "Dagelijks gemeente-raadspel — Dutch municipality guessing game",
+  "description": "Dagelijks gemeente-raadspel, Dutch municipality guessing game",
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",

@@ -121,7 +121,7 @@ function renderStatsUI(stats: OverstaplePlayerStats) {
       });
       const scoreLabel = entry.won
         ? `${entry.guesses} pogingen`
-        : '—';
+        : '…';
       return `
         <div class="flex items-center justify-between gap-2 py-2 px-3 rounded-lg bg-gray-50 text-sm">
           <div class="min-w-0">
@@ -149,12 +149,12 @@ function renderGlobalSolveCount(count: number | null, status: 'ok' | 'loading' |
   }
   if (status === 'test') {
     bannerText.textContent = 'Community-teller uitgeschakeld (testmodus)';
-    if (statEl) statEl.textContent = '—';
+    if (statEl) statEl.textContent = '…';
     return;
   }
   if (status === 'error' || count === null) {
     bannerText.textContent = 'Community-teller tijdelijk niet beschikbaar';
-    if (statEl) statEl.textContent = '—';
+    if (statEl) statEl.textContent = '…';
     return;
   }
 

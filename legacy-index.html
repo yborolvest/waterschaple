@@ -211,7 +211,7 @@
 
   <!-- Footer -->
   <footer class="relative z-10 px-4 py-4 border-t border-white/10 text-center text-white/40 text-xs">
-    <p>Waterschaple &mdash; Raad het waterschap van vandaag</p>
+    <p>Waterschaple · Raad het waterschap van vandaag</p>
     <p class="mt-1">Your Digital Agency</p>
   </footer>
 
@@ -254,7 +254,7 @@
         <!-- Community stats -->
         <div class="mb-6 p-4 rounded-xl bg-teal-accent/10 border border-teal-accent/20 text-center">
           <p class="text-xs uppercase tracking-widest text-gray-500 mb-1">Community vandaag</p>
-          <p class="text-2xl font-bold text-teal-700" id="stat-global-solves">—</p>
+          <p class="text-2xl font-bold text-teal-700" id="stat-global-solves">…</p>
           <p class="text-xs text-gray-500 mt-1">keer opgelost door spelers</p>
         </div>
 
@@ -281,7 +281,7 @@
           <button data-close="info" class="text-gray-400 hover:text-gray-600 text-2xl leading-none" aria-label="Sluiten">&times;</button>
         </div>
         <ul class="space-y-3 text-sm text-gray-700 leading-relaxed">
-          <li>🎯 Elke dag is er <strong>één waterschap</strong> het doelwit &mdash; uit alle 20 Nederlandse waterschappen.</li>
+          <li>🎯 Elke dag is er <strong>één waterschap</strong> het doelwit, uit alle 20 Nederlandse waterschappen.</li>
           <li>🔄 Je hebt <strong>6 pogingen</strong> om het juiste waterschap te vinden.</li>
           <li>📍 Na elke gok zie je de <strong>afstand in km</strong>, een <strong>pijl</strong> richting het doel, en een <strong>nabijheidsscore</strong> (0&ndash;100%).</li>
           <li>🟩 <strong>100%</strong> betekent dat je het juiste waterschap hebt geraden!</li>
@@ -326,7 +326,7 @@
 
   <script>
     /* ============================================================
-     * WATERSCHAPLE — Dutch Waterschap guessing game
+     * WATERSCHAPLE: Dutch Waterschap guessing game
      * Dataset, game logic, Haversine distance & bearing calculations
      * ============================================================ */
 
@@ -691,12 +691,12 @@
       }
       if (status === 'test') {
         bannerText.textContent = 'Community-teller uitgeschakeld (testmodus)';
-        if (statEl) statEl.textContent = '—';
+        if (statEl) statEl.textContent = '…';
         return;
       }
       if (status === 'error' || count === null) {
         bannerText.textContent = 'Community-teller tijdelijk niet beschikbaar';
-        if (statEl) statEl.textContent = '—';
+        if (statEl) statEl.textContent = '…';
         return;
       }
 
@@ -721,7 +721,7 @@
       try {
         const res = await fetch(`${GLOBAL_COUNTER_API}/get/${encodeURIComponent(key)}`);
         const data = await res.json();
-        // New daily puzzles have no key yet — treat as 0
+        // New daily puzzles have no key yet, treat as 0
         const count = data.error === 'Key not found' ? 0 : (parseInt(data.value, 10) || 0);
         state.globalSolveCount = count;
         renderGlobalSolveCount(count);
@@ -872,7 +872,7 @@
         state.guesses.forEach((g) => addGuessRow(g, true));
       }
 
-      // Already completed today — show result summary inline
+      // Already completed today, show result summary inline
       if (state.gameOver && state.resultRecorded) {
         showCompletedBanner();
       }

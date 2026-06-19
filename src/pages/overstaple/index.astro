@@ -43,7 +43,7 @@ import OverstapleGameLoop from '../../components/OverstapleGameLoop.astro';
       >
         <span aria-hidden="true">📅</span>
         Gisteren
-        <span class="text-white/60">(Puzzel #<span id="yesterday-puzzle-number">—</span>)</span>:
+        <span class="text-white/60">(Puzzel #<span id="yesterday-puzzle-number">…</span>)</span>:
         <strong id="yesterday-route" class="text-transfer-light font-semibold">…</strong>
       </div>
 
@@ -85,7 +85,7 @@ import OverstapleGameLoop from '../../components/OverstapleGameLoop.astro';
   <OverstapleGameLoop />
 
   <footer class="relative z-10 px-4 py-4 border-t border-white/10 text-center text-white/60 text-xs">
-    <p>Overstaple &mdash; Reis van station naar station</p>
+    <p>Overstaple · Reis van station naar station</p>
     <p class="mt-1"><a href="/" class="hover:text-white/60 transition-colors">Alle spellen</a> · Your Digital Agency</p>
   </footer>
 
@@ -119,7 +119,7 @@ import OverstapleGameLoop from '../../components/OverstapleGameLoop.astro';
         <div id="guess-distribution" class="space-y-2 mb-6"></div>
         <div class="mb-6 p-4 rounded-xl bg-transfer-accent/10 border border-transfer-accent/20 text-center">
           <p class="text-xs uppercase tracking-widest text-gray-500 mb-1">Community vandaag</p>
-          <p class="text-2xl font-bold text-violet-700" id="stat-global-solves">—</p>
+          <p class="text-2xl font-bold text-violet-700" id="stat-global-solves">…</p>
           <p class="text-xs text-gray-500 mt-1">keer opgelost door spelers</p>
         </div>
         <h3 class="text-sm font-semibold text-gray-700 mb-3">Recente scores</h3>
@@ -140,18 +140,18 @@ import OverstapleGameLoop from '../../components/OverstapleGameLoop.astro';
           <button data-close="info" class="text-gray-400 hover:text-gray-600 text-2xl leading-none" aria-label="Sluiten">&times;</button>
         </div>
         <ul class="space-y-3 text-sm text-gray-700 leading-relaxed">
-          <li>🚉 Elke dag krijg je een <strong>start- en eindstation</strong> — voor iedereen hetzelfde.</li>
+          <li>🚉 Elke dag krijg je een <strong>start- en eindstation</strong>, voor iedereen hetzelfde.</li>
           <li>🔄 Het antwoord is de <strong>optimale route</strong> volgens de dienstregeling (09:00 vertrek).</li>
           <li>📊 Prioriteit: <strong>1)</strong> kortste reistijd · <strong>2)</strong> minste overstappen · <strong>3)</strong> minste haltes.</li>
           <li>🚧 Actuele <strong>storingen en werkzaamheden</strong> tellen niet mee.</li>
-          <li>🚄 <strong>Sprinters</strong> tellen gewoon mee — alle haltes op de route gelden.</li>
-          <li>📝 Raad stations in <strong>willekeurige volgorde</strong> — je hoeft niet van begin naar eind te werken.</li>
+          <li>🚄 <strong>Sprinters</strong> tellen gewoon mee, alle haltes op de route gelden.</li>
+          <li>📝 Raad stations in <strong>willekeurige volgorde</strong>, je hoeft niet van begin naar eind te werken.</li>
           <li>✅ <strong>✅</strong> = op het pad én verbonden met het startstation via je eerdere goede gokken.</li>
           <li>🟩 <strong>🟩</strong> = op het kortste pad, maar nog niet verbonden met start.</li>
           <li>🟧 <strong>🟧</strong> = niet optimaal, maar slechts één overstap langer.</li>
           <li>🟥 <strong>🟥</strong> = helpt niet op weg naar de oplossing.</li>
           <li>🗺️ De <strong>kaart</strong> toont start (A) en eind (B); gevonden stations en spoorlijnen verschijnen naarmate je raadt.</li>
-          <li>🏆 Je wint als je <strong>alle tussenstations</strong> hebt gevonden — onbeperkt pogingen.</li>
+          <li>🏆 Je wint als je <strong>alle tussenstations</strong> hebt gevonden, onbeperkt pogingen.</li>
           <li>📤 Deel je score via de deelknop na afloop.</li>
         </ul>
         <button data-close="info" class="mt-6 w-full py-3 rounded-xl bg-royal-800 text-white font-semibold hover:bg-royal-700 transition-colors">Begrepen!</button>

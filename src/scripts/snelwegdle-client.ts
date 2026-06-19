@@ -102,7 +102,7 @@ let globalCountInterval: ReturnType<typeof setInterval> | null = null;
 
 function formatSnelwegLabel(s: Snelweg): string {
 
-  return `${s.name} — ${s.route}`;
+  return `${s.name} (${s.route})`;
 
 }
 
@@ -332,7 +332,7 @@ function renderGlobalSolveCount(count: number | null, status: 'ok' | 'loading' |
 
     bannerText.textContent = 'Community-teller uitgeschakeld (testmodus)';
 
-    if (statEl) statEl.textContent = '—';
+    if (statEl) statEl.textContent = '…';
 
     return;
 
@@ -342,7 +342,7 @@ function renderGlobalSolveCount(count: number | null, status: 'ok' | 'loading' |
 
     bannerText.textContent = 'Community-teller tijdelijk niet beschikbaar';
 
-    if (statEl) statEl.textContent = '—';
+    if (statEl) statEl.textContent = '…';
 
     return;
 
@@ -932,7 +932,7 @@ async function endGame() {
 
     $('#result-answer')!.classList.remove('hidden');
 
-    $('#result-answer-name')!.textContent = state.target ? formatSnelwegLabel(state.target) : '—';
+    $('#result-answer-name')!.textContent = state.target ? formatSnelwegLabel(state.target) : '…';
 
   }
 

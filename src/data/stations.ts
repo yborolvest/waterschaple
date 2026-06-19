@@ -1,5 +1,5 @@
 /**
- * Nederlandse treinstations — dataset voor Stationdle
+ * Nederlandse treinstations: dataset voor Stationdle
  * NL: 397 stations, bron: ProRail (PDOK) + trajecten Rijden de Treinen.
  * EN: Dutch railway stations with province and passenger route hints.
  * @see https://api.pdok.nl/prorail/spoorwegen/ogc/v1

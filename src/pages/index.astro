@@ -53,7 +53,7 @@ const dateStr = today.toLocaleDateString('nl-NL', {
                 href={game.href}
                 data-game-id={game.id}
                 data-status="not-played"
-                aria-label={`${game.name} — nog niet gespeeld vandaag`}
+                aria-label={`${game.name}, nog niet gespeeld vandaag`}
                 class:list={[
                   'hub-card',
                   `hub-card--${game.theme}`,
@@ -131,7 +131,7 @@ const dateStr = today.toLocaleDateString('nl-NL', {
 
   <footer class="relative z-10 px-4 py-4 border-t border-white/10 text-center text-white/60 text-xs">
     <p>
-      Rijkdle &mdash; Your Digital Agency
+      Rijkdle · Your Digital Agency
       <span class="mx-1" aria-hidden="true">·</span>
       <a href="/privacy" class="hover:text-white/80 transition-colors">Privacy</a>
     </p>

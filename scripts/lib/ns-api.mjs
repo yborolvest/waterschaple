@@ -91,7 +91,7 @@ export function isViableNsTrip(trip) {
 }
 
 /**
- * NL: Beste reis — 1) reistijd 2) overstappen 3) haltes (geplande dienstregeling).
+ * NL: Beste reis: 1) reistijd 2) overstappen 3) haltes (geplande dienstregeling).
  * EN: Best trip by planned duration, then transfers, then stops.
  */
 export function selectBestNsTrip(trips) {

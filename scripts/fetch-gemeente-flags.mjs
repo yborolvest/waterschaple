@@ -12,7 +12,7 @@ const WIKI_TITLE_OVERRIDES = {
   "'s-Gravenhage": 'Den_Haag',
   "'s-Hertogenbosch": "'s-Hertogenbosch",
   'Nuenen c.a.': 'Nuenen,_Gerwen_en_Nederwetten',
-  Bergen: null, // dubbel — via provincie
+  Bergen: null, // dubbel, via provincie
 };
 
 const SPARQL = `
@@ -142,7 +142,7 @@ async function main() {
 
   const out = `/**
  * Gemeentevlag-URL's voor hints (Wikidata P41 / Wikipedia fallback)
- * NL: Automatisch gegenereerd — niet handmatig bewerken.
+ * NL: Automatisch gegenereerd: niet handmatig bewerken.
  * EN: Auto-generated flag image URLs keyed by gemeente id.
  * Run: npm run fetch:flags
  */

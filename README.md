@@ -6,11 +6,11 @@ Daily geo-guessing game: find the correct Dutch water board in up to 6 attempts.
 
 ## Functies / Features
 
-- Dagelijkse puzzel op basis van **Nederlandse tijd** (`Europe/Amsterdam`) — wereldwijd hetzelfde
+- Dagelijkse puzzel op basis van **Nederlandse tijd** (`Europe/Amsterdam`), wereldwijd hetzelfde
 - Gisteren's antwoord altijd zichtbaar
 - Afstand, richting en nabijheidsscore per gok
 - Lokale statistieken: reeks, winst%, verdeling pogingen
-- **Community-teller via eigen API** — betrouwbare server-side opslag
+- **Community-teller via eigen API**, betrouwbare server-side opslag
 - Volledig responsive, water-thema UI
 
 ## Ontwikkeling / Development
@@ -32,7 +32,7 @@ npm run build
 npm run start
 ```
 
-**NL:** Hybrid Astro-app — vereist een **Node-server** (geen pure static hosting).  
+**NL:** Hybrid Astro-app: vereist een **Node-server** (geen pure static hosting).  
 **EN:** Requires Node runtime (`@astrojs/node`). Deploy to Railway, Render, Fly.io, or similar.
 
 ### Nixpacks (Coolify / Railway)
@@ -59,7 +59,7 @@ Het project bevat een `nixpacks.toml`. De build draait `npm ci` + `npm run build
 | Endpoint | Beschrijving |
 |----------|--------------|
 | `GET /api/solves/count?puzzle=532&date=2026-06-16` | Aantal wins vandaag |
-| `POST /api/solves/increment` | `{ puzzleNumber, dateKey }` — +1 na winst |
+| `POST /api/solves/increment` | `{ puzzleNumber, dateKey }`, +1 na winst |
 
 ## Projectstructuur / Structure
 
@@ -69,9 +69,9 @@ Zie `CONTEXT.md` voor volledige documentatie.
 
 In `src/lib/config.ts`:
 
-- `USE_RANDOM_TARGET_FOR_TESTING` — `true` voor willekeurig doelwit (testen)
-- `GAME_TIMEZONE` — `Europe/Amsterdam`
-- `STORAGE_KEY` — localStorage-sleutel voor spelersstats
+- `USE_RANDOM_TARGET_FOR_TESTING`, `true` voor willekeurig doelwit (testen)
+- `GAME_TIMEZONE`, `Europe/Amsterdam`
+- `STORAGE_KEY`, localStorage-sleutel voor spelersstats
 
 ## Legacy
 
