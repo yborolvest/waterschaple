@@ -1,0 +1,41 @@
+---
+/** NL: Sitefooter / EN: Site footer */
+import { SITE_AUTHOR, SITE_NAME } from '../lib/seo';
+
+interface Props {
+  /** NL: Extra regel boven de standaard footer (spelpagina's) / EN: Extra line above default footer (game pages) */
+  tagline?: string;
+  /** NL: Toon privacy-link (hub) / EN: Show privacy link (hub) */
+  showPrivacy?: boolean;
+}
+
+const { tagline, showPrivacy = false } = Astro.props;
+---
+
+<footer class="relative z-10 px-4 py-4 border-t border-white/10 text-center text-white/60 text-xs">
+  {tagline && <p>{tagline}</p>}
+  <p class:list={[tagline && 'mt-1']}>
+    {
+      tagline ? (
+        <>
+          <a href="/" class="hover:text-white/60 transition-colors">Alle spellen</a>
+          {' · '}
+          {SITE_AUTHOR}
+        </>
+      ) : (
+        <>
+          {SITE_NAME} · {SITE_AUTHOR}
+          {showPrivacy && (
+            <>
+              <span class="mx-1" aria-hidden="true">·</span>
+              <a href="/privacy" class="hover:text-white/80 transition-colors">Privacy</a>
+            </>
+          )}
+        </>
+      )
+    }
+  </p>
+  <p class="mt-1">
+    <a href="https://ko-fi.com/yborolvest" target="_blank" class="hover:text-white/80 transition-colors" target="_blank" rel="noopener noreferrer">Wil je dit project steunen? <span class="underline">Klik hier</span></a>
+  </p>
+</footer>

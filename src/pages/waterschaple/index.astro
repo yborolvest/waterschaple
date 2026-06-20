@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import WaterschapleGameLoop from '../../components/WaterschapleGameLoop.astro';
+import SiteFooter from '../../components/SiteFooter.astro';
 ---
 
 <BaseLayout gameId="waterschaple" wave="teal">
@@ -84,10 +85,7 @@ import WaterschapleGameLoop from '../../components/WaterschapleGameLoop.astro';
 
   <WaterschapleGameLoop />
 
-  <footer class="relative z-10 px-4 py-4 border-t border-white/10 text-center text-white/60 text-xs">
-    <p>Waterschaple · Raad het waterschap van vandaag</p>
-    <p class="mt-1"><a href="/" class="hover:text-white/60 transition-colors">Alle spellen</a> · Your Digital Agency</p>
-  </footer>
+  <SiteFooter tagline="Waterschaple · Raad het waterschap van vandaag" />
 
   <!-- Stats modal -->
   <div id="modal-stats" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="stats-title">

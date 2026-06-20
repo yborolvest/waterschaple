@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteLogo from '../components/SiteLogo.astro';
+import SiteFooter from '../components/SiteFooter.astro';
 import { DAILY_GAMES } from '../data/games';
 import { getPuzzleNumber } from '../lib/game-logic';
 import { buildGameListJsonLd, buildWebSiteJsonLd, DEFAULT_DESCRIPTION, SITE_NAME } from '../lib/seo';
@@ -142,13 +143,7 @@ const dateStr = today.toLocaleDateString('nl-NL', {
     </div>
   </main>
 
-  <footer class="relative z-10 px-4 py-4 border-t border-white/10 text-center text-white/60 text-xs">
-    <p>
-      Rijkdle · Your Digital Agency
-      <span class="mx-1" aria-hidden="true">·</span>
-      <a href="/privacy" class="hover:text-white/80 transition-colors">Privacy</a>
-    </p>
-  </footer>
+  <SiteFooter showPrivacy />
 
   <script>
     import { initHub } from '../scripts/hub-client';
