@@ -11,6 +11,15 @@ export interface BrandAssetSet {
   height: number;
 }
 
+/** NL: Open Graph / social preview / EN: Open Graph social preview card */
+export const BRAND_OG_IMAGE = {
+  png: '/card.png',
+  png2x: '/card@2x.png',
+  width: 950,
+  height: 546,
+  alt: 'Rijkdle — dagelijkse Nederlandse geo-raadspellen',
+} as const;
+
 export const BRAND_ASSETS = {
   logo: {
     light: {

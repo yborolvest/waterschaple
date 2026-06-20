@@ -1,7 +1,7 @@
 /** NL: Site-brede SEO- en social metadata / EN: Site-wide SEO and social metadata */
 
 import { DAILY_GAMES } from '../data/games';
-import { BRAND_ASSETS } from './brand';
+import { BRAND_ASSETS, BRAND_OG_IMAGE } from './brand';
 
 export const SITE_NAME = 'Rijkdle';
 export const SITE_URL = 'https://rijkdle.nl';
@@ -14,10 +14,10 @@ export const DEFAULT_DESCRIPTION =
   'Speel dagelijkse Nederlandse geo-raadspellen op Rijkdle: Gemeentedle, Waterschaple, Snelwegdle, Stationdle en Overstaple.';
 
 export const DEFAULT_OG_IMAGE = {
-  url: '/logo@2x.png',
-  width: BRAND_ASSETS.logo.light.width,
-  height: BRAND_ASSETS.logo.light.height,
-  alt: 'Rijkdle: dagelijkse Nederlandse geo-raadspellen',
+  url: BRAND_OG_IMAGE.png2x,
+  width: BRAND_OG_IMAGE.width,
+  height: BRAND_OG_IMAGE.height,
+  alt: BRAND_OG_IMAGE.alt,
 } as const;
 
 export const SITEMAP_PATHS = [
