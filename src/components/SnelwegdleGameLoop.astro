@@ -1,7 +1,10 @@
 ---
+import {
+  SNELWEGDLE_HINT_LENGTH_AFTER_ATTEMPT,
+  SNELWEGDLE_HINT_ROUTE_AFTER_ATTEMPT,
+} from '../lib/snelwegdle/hints';
 
 /** Snelwegdle spelinterface: geel wegthema / highway yellow accent theme */
-
 ---
 
 
@@ -26,24 +29,48 @@
 
     <section id="hints-section" class="mb-6" aria-label="Hints">
       <h2 class="text-xs uppercase tracking-widest text-white/40 mb-3 font-semibold">Hints</h2>
-      <div
-        id="hint-route-card"
-        class="rounded-xl border border-white/10 bg-white/5 p-4 flex flex-col gap-2 opacity-40"
-      >
-        <p class="text-xs font-semibold text-white/50">
-          <span class="text-highway-accent">1.</span> Routeschets
-        </p>
+      <div class="grid grid-cols-1 gap-3">
         <div
-          id="hint-route-locked"
-          class="flex flex-col items-center justify-center h-36 rounded-lg bg-white/5 text-white/30 text-sm"
+          id="hint-length-card"
+          class="rounded-xl border border-white/10 bg-white/5 p-4 flex flex-col gap-2 opacity-40"
         >
-          <span aria-hidden="true" class="text-2xl mb-1">🛣️</span>
-          <span>Na 2e poging</span>
+          <p class="text-xs font-semibold text-white/50">
+            <span class="text-highway-accent">1.</span> Lengte
+          </p>
+          <div
+            id="hint-length-locked"
+            class="flex flex-col items-center justify-center h-20 rounded-lg bg-white/5 text-white/30 text-sm"
+          >
+            <span aria-hidden="true" class="text-2xl mb-1">📏</span>
+            <span>Na {SNELWEGDLE_HINT_LENGTH_AFTER_ATTEMPT}e poging</span>
+          </div>
+          <p id="hint-length-text" class="hidden text-2xl font-bold text-highway-light text-center py-4"></p>
         </div>
-        <div id="hint-route-map" class="hidden h-36 rounded-lg overflow-hidden border border-highway-accent/20"></div>
-        <p id="hint-route-missing" class="hidden h-36 flex items-center justify-center rounded-lg bg-white/5 text-white/40 text-xs text-center px-2">
-          Routeschets niet beschikbaar
-        </p>
+        <div
+          id="hint-route-card"
+          class="rounded-xl border border-white/10 bg-white/5 p-4 flex flex-col gap-2 opacity-40"
+        >
+          <p class="text-xs font-semibold text-white/50">
+            <span class="text-highway-accent">2.</span> Routeschets
+          </p>
+          <div
+            id="hint-route-locked"
+            class="flex flex-col items-center justify-center min-h-[120px] rounded-xl bg-white/5 text-white/30 text-sm"
+          >
+            <span aria-hidden="true" class="text-2xl mb-1">🛣️</span>
+            <span>Na {SNELWEGDLE_HINT_ROUTE_AFTER_ATTEMPT}e poging</span>
+          </div>
+          <div
+            id="hint-route-map"
+            class="hidden w-full min-h-[200px] rounded-xl overflow-hidden border border-highway-accent/20 bg-royal-950/40"
+          ></div>
+          <p
+            id="hint-route-missing"
+            class="hidden min-h-[120px] flex items-center justify-center rounded-xl bg-white/5 text-white/40 text-xs text-center px-2"
+          >
+            Routeschets niet beschikbaar
+          </p>
+        </div>
       </div>
     </section>
 

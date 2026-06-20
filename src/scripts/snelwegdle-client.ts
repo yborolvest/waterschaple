@@ -34,9 +34,10 @@ import {
 
 import { getSnelwegDailyTarget, getYesterdaySnelwegTarget } from '../lib/snelwegdle/logic';
 
-import { SNELWEGDLE_HINT_ROUTE_AFTER_ATTEMPT } from '../lib/snelwegdle/hints';
-
-import { getSnelwegGeometry } from '../data/snelweg-geometries';
+import {
+  SNELWEGDLE_HINT_LENGTH_AFTER_ATTEMPT,
+  SNELWEGDLE_HINT_ROUTE_AFTER_ATTEMPT,
+} from '../lib/snelwegdle/hints';
 
 import { renderRouteHint } from '../lib/snelwegdle/route-hint';
 
@@ -660,6 +661,16 @@ function hideError() {
 
 
 
+function getOfficialTarget(): Snelweg | null {
+
+  if (USE_RANDOM_TARGET_FOR_TESTING) return state.target;
+
+  return getSnelwegDailyTarget();
+
+}
+
+
+
 function renderHints() {
 
   const section = $('#hints-section');
@@ -668,13 +679,45 @@ function renderHints() {
 
 
 
-  const unlocked = state.attempts >= SNELWEGDLE_HINT_ROUTE_AFTER_ATTEMPT;
+  const lengthUnlocked = state.attempts >= SNELWEGDLE_HINT_LENGTH_AFTER_ATTEMPT;
+
+  const routeUnlocked = state.attempts >= SNELWEGDLE_HINT_ROUTE_AFTER_ATTEMPT;
+
+  const hintTarget = getOfficialTarget();
 
 
 
-  const card = $('#hint-route-card')!;
+  const lengthCard = $('#hint-length-card')!;
 
-  const locked = $('#hint-route-locked')!;
+  const lengthLocked = $('#hint-length-locked')!;
+
+  const lengthText = $('#hint-length-text')!;
+
+
+
+  lengthCard.classList.toggle('opacity-40', !lengthUnlocked);
+
+  lengthCard.classList.toggle('border-highway-accent/30', lengthUnlocked);
+
+  lengthLocked.classList.toggle('hidden', lengthUnlocked);
+
+  lengthText.classList.toggle('hidden', !lengthUnlocked);
+
+
+
+  if (lengthUnlocked && hintTarget) {
+
+    lengthText.textContent =
+
+      hintTarget.lengthKm > 0 ? `${hintTarget.lengthKm.toLocaleString('nl-NL')} km` : '—';
+
+  }
+
+
+
+  const routeCard = $('#hint-route-card')!;
+
+  const routeLocked = $('#hint-route-locked')!;
 
   const map = $('#hint-route-map')!;
 
@@ -682,11 +725,11 @@ function renderHints() {
 
 
 
-  card.classList.toggle('opacity-40', !unlocked);
+  routeCard.classList.toggle('opacity-40', !routeUnlocked);
 
-  card.classList.toggle('border-highway-accent/30', unlocked);
+  routeCard.classList.toggle('border-highway-accent/30', routeUnlocked);
 
-  locked.classList.toggle('hidden', unlocked);
+  routeLocked.classList.toggle('hidden', routeUnlocked);
 
   map.classList.add('hidden');
 
@@ -694,21 +737,15 @@ function renderHints() {
 
 
 
-  if (unlocked && state.target) {
+  if (routeUnlocked && hintTarget?.path.length >= 2) {
 
-    const geometry = getSnelwegGeometry(state.target.id);
+    renderRouteHint(map, hintTarget.path);
 
-    if (geometry && geometry.length >= 2) {
+    map.classList.remove('hidden');
 
-      renderRouteHint(map, geometry);
+  } else if (routeUnlocked) {
 
-      map.classList.remove('hidden');
-
-    } else {
-
-      missing.classList.remove('hidden');
-
-    }
+    missing.classList.remove('hidden');
 
   }
 
@@ -1272,27 +1309,51 @@ export function initSnelwegdle() {
 
 
 
-  const expectedTarget = USE_RANDOM_TARGET_FOR_TESTING ? null : getSnelwegDailyTarget(today);
+  const officialTarget = USE_RANDOM_TARGET_FOR_TESTING ? null : getSnelwegDailyTarget(today);
 
   const saved = !USE_RANDOM_TARGET_FOR_TESTING && state.stats.todayGame;
+
+  const staleTodayGame =
+
+    !!saved &&
+
+    saved.date === state.dateKey &&
+
+    officialTarget &&
+
+    saved.targetId !== officialTarget.id;
+
+
+
+  if (staleTodayGame && state.stats) {
+
+    state.stats.todayGame = null;
+
+    saveSnelwegdleStats(state.stats);
+
+  }
+
+
 
   const canRestore =
 
     !!saved &&
 
-    state.stats.todayGame!.date === state.dateKey &&
+    !staleTodayGame &&
 
-    state.stats.todayGame!.puzzleNumber === state.puzzleNumber &&
+    saved.date === state.dateKey &&
 
-    state.stats.todayGame!.targetId === expectedTarget?.id;
+    saved.puzzleNumber === state.puzzleNumber &&
+
+    saved.targetId === officialTarget?.id;
 
 
 
-  if (canRestore && state.stats.todayGame) {
+  if (canRestore && state.stats.todayGame && officialTarget) {
 
     const tg = state.stats.todayGame;
 
-    state.target = SNELWEGEN.find((s) => s.id === tg.targetId) ?? null;
+    state.target = officialTarget;
 
     state.guesses = tg.guesses.map(deserializeSnelwegGuess).filter((g): g is SnelwegGuess => g !== null);
 
@@ -1308,7 +1369,7 @@ export function initSnelwegdle() {
 
       ? SNELWEGEN[Math.floor(Math.random() * SNELWEGEN.length)]
 
-      : expectedTarget;
+      : officialTarget;
 
     state.guesses = [];
 
@@ -1321,6 +1382,13 @@ export function initSnelwegdle() {
       ? (state.stats.history.find((h) => h.date === state.dateKey)?.won ?? false)
 
       : false;
+
+    if (state.resultRecorded) {
+      const entry = state.stats.history.find((h) => h.date === state.dateKey);
+      if (entry) {
+        state.attempts = entry.won ? (entry.attempts ?? 0) : MAX_ATTEMPTS;
+      }
+    }
 
   }
 

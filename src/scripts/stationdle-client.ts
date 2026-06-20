@@ -285,8 +285,8 @@ function mergeHints(current: StationUnlockedHints, next: StationUnlockedHints): 
 
 function renderHints() {
   const section = $('#hints-section')!;
-  const provinceUnlocked = state.attempts >= HINT_PROVINCE_AFTER_ATTEMPT && !state.won;
-  const trajectUnlocked = state.attempts >= HINT_TRAJECT_AFTER_ATTEMPT && !state.won;
+  const provinceUnlocked = state.attempts >= HINT_PROVINCE_AFTER_ATTEMPT;
+  const trajectUnlocked = state.attempts >= HINT_TRAJECT_AFTER_ATTEMPT;
 
   section.classList.remove('hidden');
 
@@ -528,6 +528,7 @@ async function submitGuess() {
 
   renderAttemptDots();
   updateAttemptLabel();
+  renderHints();
   hideAutocomplete();
   guessInput.blur();
 
@@ -693,11 +694,16 @@ export async function initStationdle() {
     state.targetName = null;
     state.targetProvince = null;
     state.unlockedHints = { province: null, traject: null };
+    if (state.resultRecorded) {
+      const entry = state.stats.history.find((h) => h.date === state.dateKey);
+      if (entry) {
+        state.attempts = entry.won ? (entry.attempts ?? 0) : MAX_ATTEMPTS;
+      }
+    }
   }
 
   if (
     state.attempts >= HINT_PROVINCE_AFTER_ATTEMPT &&
-    !state.won &&
     (!state.unlockedHints.province ||
       (state.attempts >= HINT_TRAJECT_AFTER_ATTEMPT && !state.unlockedHints.traject))
   ) {

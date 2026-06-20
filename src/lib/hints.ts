@@ -5,16 +5,12 @@ import type { UnlockedHints } from './types';
 
 export type { UnlockedHints };
 
-/** Server-side: welke hints zijn vrijgespeeld na N pogingen (alleen bij nog niet gewonnen) */
+/** Server-side: welke hints zijn vrijgespeeld na N pogingen (ook na afloop). / Unlocked hints after N attempts (including after game over). */
 export function getUnlockedHints(
   attemptNumber: number,
   target: Gemeente,
-  gameWon: boolean,
+  _gameWon: boolean,
 ): UnlockedHints {
-  if (gameWon) {
-    return { flagUrl: null, province: null };
-  }
-
   const flagUrl =
     attemptNumber >= HINT_FLAG_AFTER_ATTEMPT ? getGemeenteFlagUrl(target.id) : null;
 

@@ -138,12 +138,8 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     response.target = toPublicGemeente(target);
   }
 
-  if (!result.isCorrect) {
-    response.hints = getUnlockedHints(
-      typeof attemptNumber === 'number' ? attemptNumber : 0,
-      target,
-      false,
-    );
+  if (typeof attemptNumber === 'number') {
+    response.hints = getUnlockedHints(attemptNumber, target, false);
   }
 
   return json(response);

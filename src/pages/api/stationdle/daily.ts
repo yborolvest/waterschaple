@@ -132,12 +132,8 @@ export const POST: APIRoute = async ({ request, clientAddress }) => {
     response.target = toPublicStation(target);
   }
 
-  if (!result.isCorrect) {
-    response.hints = getStationUnlockedHints(
-      typeof attemptNumber === 'number' ? attemptNumber : 0,
-      target,
-      false,
-    );
+  if (typeof attemptNumber === 'number') {
+    response.hints = getStationUnlockedHints(attemptNumber, target, false);
   }
 
   return json(response);
