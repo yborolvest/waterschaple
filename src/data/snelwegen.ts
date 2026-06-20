@@ -1,7 +1,16 @@
-import { SNELWEG_GEOMETRIES, type SnelwegPath } from './snelweg-geometries';
+import { buildSnelwegPath, type SnelwegPath } from './snelweg-route-paths';
+import { SNELWEG_GEOMETRIES, SNELWEG_GEOMETRIES_IS_OSM } from './snelweg-geometries';
 import { haversineDistance } from '../lib/game-logic';
 
 export type { SnelwegPath };
+
+function resolveSnelwegPath(id: string, route: string): SnelwegPath[] {
+  if (SNELWEG_GEOMETRIES_IS_OSM) {
+    const osm = SNELWEG_GEOMETRIES[id];
+    if (osm?.length >= 2) return osm;
+  }
+  return buildSnelwegPath(id, route);
+}
 
 export interface Snelweg {
   id: string;
@@ -71,7 +80,7 @@ const SNELWEG_META: { id: string; name: string; route: string }[] = [
 
 /** Nederlandse rijksautosnelwegen — geo-middelpunt afgeleid van routepunten */
 export const SNELWEGEN: Snelweg[] = SNELWEG_META.map((meta) => {
-  const path = SNELWEG_GEOMETRIES[meta.id] ?? [];
+  const path = resolveSnelwegPath(meta.id, meta.route);
   const { lat, lng } = pathCentroid(path);
   const lengthKm = pathLengthKm(path);
   return { ...meta, path, lat, lng, lengthKm };

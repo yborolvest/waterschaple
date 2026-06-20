@@ -32,7 +32,11 @@ import {
 
 } from '../lib/game-logic';
 
-import { getSnelwegDailyTarget, getYesterdaySnelwegTarget } from '../lib/snelwegdle/logic';
+import {
+  getSnelwegDailyTarget,
+  getSnelwegDailyTargetFromKey,
+  getYesterdaySnelwegTarget,
+} from '../lib/snelwegdle/logic';
 
 import {
   SNELWEGDLE_HINT_LENGTH_AFTER_ATTEMPT,
@@ -661,12 +665,13 @@ function hideError() {
 
 
 
-function getOfficialTarget(): Snelweg | null {
-
+/** NL: Altijd het doel van vandaag (zelfde dateKey als het spel) / EN: Today's target for the active puzzle date */
+function getHintTarget(): Snelweg | null {
   if (USE_RANDOM_TARGET_FOR_TESTING) return state.target;
-
-  return getSnelwegDailyTarget();
-
+  if (!state.dateKey) return state.target;
+  const official = getSnelwegDailyTargetFromKey(state.dateKey);
+  if (state.target?.id === official.id) return state.target;
+  return official;
 }
 
 
@@ -683,7 +688,7 @@ function renderHints() {
 
   const routeUnlocked = state.attempts >= SNELWEGDLE_HINT_ROUTE_AFTER_ATTEMPT;
 
-  const hintTarget = getOfficialTarget();
+  const hintTarget = getHintTarget();
 
 
 

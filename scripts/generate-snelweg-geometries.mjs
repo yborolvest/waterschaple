@@ -120,7 +120,11 @@ async function fetchRoadGeometry(ref) {
 
   const res = await fetch(OVERPASS_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+      Accept: 'application/json',
+      'User-Agent': 'waterschaple/1.0',
+    },
     body: `data=${encodeURIComponent(query)}`,
   });
 
@@ -157,6 +161,11 @@ async function main() {
     await sleep(DELAY_MS);
   }
 
+  if (Object.keys(geometries).length === 0) {
+    console.error('\nGeen geometrie opgehaald — bestaand bestand niet overschreven.');
+    process.exit(1);
+  }
+
   const lines = Object.entries(geometries)
     .map(([id, path]) => {
       const pts = path.map(([lat, lng]) => `[${lat}, ${lng}]`).join(', ');
@@ -169,6 +178,8 @@ async function main() {
 /** EN: Simplified route coordinates per motorway from OSM Overpass */
 
 export type SnelwegPath = [lat: number, lng: number];
+
+export const SNELWEG_GEOMETRIES_IS_OSM = true;
 
 export const SNELWEG_GEOMETRIES: Record<string, SnelwegPath[]> = {
 ${lines}
